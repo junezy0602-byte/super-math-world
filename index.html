@@ -1,1631 +1,1120 @@
 <!DOCTYPE html>
-<html lang="zh-Hans">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Super Math World: Number Kingdom</title>
   <style>
-    :root {
-      --ink: #1d2440;
-      --panel: #fff8dc;
-      --panel-edge: #7a4a20;
-      --accent: #f7c531;
-      --danger: #d93636;
-      --green: #2f9f5b;
-      --blue: #246fd6;
-      --red: #dc3838;
-    }
-
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
-    html {
+    html,
+    body {
+      width: 100%;
       height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      background: #6ed0ff;
+      color: #16314f;
+      overscroll-behavior: none;
+      touch-action: none;
     }
 
     body {
-      margin: 0;
-      min-height: 100vh;
-      min-height: 100dvh;
       display: grid;
       place-items: center;
-      overflow: hidden;
-      color: var(--ink);
-      font-family: "Trebuchet MS", Arial, sans-serif;
-      touch-action: none;
-      background:
-        linear-gradient(rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.1)),
-        url("sky.png") center / cover fixed no-repeat,
-        linear-gradient(#74c8ff 0%, #bdeeff 58%, #87d85d 58%, #58b548 100%);
     }
 
-    .shell {
-      width: min(100vw, 1120px);
-      padding: 12px;
-    }
-
-    .game-frame {
+    #gameShell {
       position: relative;
-      width: 100%;
+      width: min(100vw, 1180px);
       aspect-ratio: 16 / 9;
+      max-height: 100vh;
       overflow: hidden;
-      border: 5px solid #2b2b2b;
-      border-radius: 8px;
-      background:
-        linear-gradient(rgba(112, 198, 255, 0.25), rgba(112, 198, 255, 0.2)),
-        url("sky.png") center / cover no-repeat,
-        linear-gradient(#7bd1ff, #dbf8ff);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      border: 5px solid #1b3552;
+      background: #76d8ff;
+      box-shadow: 0 18px 0 #13283f;
       image-rendering: pixelated;
       touch-action: none;
     }
 
     canvas {
-      display: block;
       width: 100%;
       height: 100%;
+      display: block;
       image-rendering: pixelated;
-      background: transparent;
     }
 
-    .overlay {
+    .screen,
+    .modalShade {
       position: absolute;
       inset: 0;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      background: rgba(42, 139, 213, 0.32);
-      backdrop-filter: blur(2px);
+      padding: clamp(16px, 4vw, 44px);
+      background:
+        linear-gradient(rgba(118, 216, 255, 0.5), rgba(118, 216, 255, 0.08)),
+        radial-gradient(circle at 25% 18%, rgba(255, 255, 255, 0.78) 0 48px, transparent 49px),
+        radial-gradient(circle at 70% 28%, rgba(255, 255, 255, 0.68) 0 62px, transparent 63px);
       z-index: 5;
-      overflow-y: auto;
     }
 
-    .overlay.active {
+    .screen.active,
+    .modalShade.active {
       display: flex;
     }
 
     .panel {
-      width: min(720px, 94%);
-      padding: 22px;
-      border: 5px solid var(--panel-edge);
+      width: min(720px, 92vw);
+      padding: clamp(18px, 4vw, 34px);
+      border: 5px solid #172c42;
       border-radius: 8px;
-      background: var(--panel);
-      box-shadow: 0 8px 0 #4e2d14, 0 20px 30px rgba(0, 0, 0, 0.26);
+      background: #fff7d1;
+      box-shadow: 0 10px 0 #b6782e;
       text-align: center;
-      max-height: calc(100% - 20px);
-      overflow-y: auto;
-    }
-
-    h1, h2, p {
-      margin: 0;
     }
 
     h1 {
-      font-size: clamp(30px, 6vw, 58px);
-      line-height: 0.98;
-      color: #e53935;
-      text-shadow: 3px 3px 0 #ffd447, 5px 5px 0 #2c5aa0;
+      margin: 0 0 10px;
+      font-size: clamp(28px, 6vw, 58px);
+      line-height: 0.95;
+      color: #d93824;
+      text-shadow: 3px 3px 0 #ffd24a, 5px 5px 0 #14324f;
     }
 
     h2 {
-      font-size: clamp(22px, 3.6vw, 34px);
-      margin-bottom: 14px;
-      color: #2c5aa0;
+      margin: 0 0 18px;
+      font-size: clamp(22px, 4vw, 36px);
+      color: #173957;
     }
 
-    .tagline {
-      margin: 16px auto 22px;
-      max-width: 520px;
-      font-size: clamp(15px, 2.2vw, 19px);
-      line-height: 1.45;
-    }
-
-    .button-row,
-    .choice-grid,
-    .answer-grid {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
+    .subtitle {
+      margin: 0 0 24px;
+      font-size: clamp(15px, 2.4vw, 22px);
+      font-weight: 800;
+      color: #225b73;
     }
 
     button {
-      min-height: 44px;
-      border: 0;
+      border: 4px solid #172c42;
       border-radius: 8px;
-      padding: 10px 18px;
-      color: #fff;
-      font-weight: 800;
-      font-size: 17px;
-      font-family: inherit;
+      background: #ffcf3d;
+      color: #172c42;
+      font: 900 clamp(16px, 2.5vw, 22px) "Trebuchet MS", Arial, sans-serif;
       cursor: pointer;
-      background: #2c5aa0;
-      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.25), 0 4px 0 rgba(0, 0, 0, 0.28);
+      box-shadow: 0 6px 0 #a45f1e;
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
     }
 
-    button:active,
-    button.pressed {
-      transform: translateY(3px);
-      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25), 0 1px 0 rgba(0, 0, 0, 0.28);
+    button:hover {
+      background: #ffe166;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #a45f1e;
     }
 
-    .primary {
-      background: #e53935;
+    button:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #a45f1e;
     }
 
-    .choice-card {
-      width: min(260px, 42vw);
-      min-height: 178px;
-      padding: 14px;
-      border: 4px solid #292929;
-      border-radius: 8px;
-      background: #fff;
-      color: var(--ink);
+    .primaryBtn {
+      min-width: 190px;
+      padding: 13px 22px;
     }
 
-    .choice-card.selected {
-      outline: 5px solid var(--accent);
+    .characterGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
     }
 
-    .pixel-preview {
-      width: 92px;
-      height: 92px;
-      margin: 0 auto 10px;
-      border: 3px solid #333;
-      background: #bdeeff;
+    .characterCard {
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      padding: 16px;
+      background: #dff7ff;
+    }
+
+    .pixelHero {
+      width: 78px;
+      height: 96px;
+      position: relative;
       image-rendering: pixelated;
     }
 
-    .hud-note {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #67421d;
-    }
-
-    .answer-grid {
-      margin-top: 18px;
-    }
-
-    .answer-grid button {
-      min-width: 132px;
-      background: #2f9f5b;
-    }
-
-    .feedback {
-      min-height: 24px;
-      margin-top: 12px;
-      font-weight: 900;
-    }
-
-    .mobile-controls {
+    .pixelHero span {
       position: absolute;
-      inset: auto 0 12px 0;
-      z-index: 3;
+      display: block;
+      border: 3px solid #12283f;
+    }
+
+    .pixelHero .hat { left: 16px; top: 4px; width: 46px; height: 18px; }
+    .pixelHero .face { left: 18px; top: 22px; width: 42px; height: 25px; background: #ffd29c; }
+    .pixelHero .body { left: 19px; top: 49px; width: 40px; height: 31px; }
+    .pixelHero .legA { left: 16px; top: 78px; width: 18px; height: 16px; background: #263c9b; }
+    .pixelHero .legB { right: 15px; top: 78px; width: 18px; height: 16px; background: #263c9b; }
+    .pixelHero.red .hat,
+    .pixelHero.red .body { background: #e43a2d; }
+    .pixelHero.green .hat,
+    .pixelHero.green .body { background: #2eb85d; }
+
+    .questionPanel {
+      width: min(720px, 94vw);
+      padding: clamp(18px, 4vw, 30px);
+      border: 5px solid #172c42;
+      border-radius: 8px;
+      background: #fff7d1;
+      box-shadow: 0 10px 0 #b6782e;
+    }
+
+    #questionType {
+      margin: 0 0 8px;
+      font-weight: 900;
+      color: #cf3a2f;
+      letter-spacing: 0;
+    }
+
+    #questionText {
+      min-height: 62px;
+      margin: 0 0 18px;
+      font-size: clamp(21px, 4vw, 32px);
+      line-height: 1.25;
+      font-weight: 900;
+      color: #173957;
+    }
+
+    .answerGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .answerBtn {
+      min-height: 54px;
+      padding: 10px;
+      background: #ffffff;
+    }
+
+    #mobileControls {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 12px;
       display: none;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: end;
       padding: 0 18px;
       pointer-events: none;
+      z-index: 4;
     }
 
-    .mobile-cluster {
+    .moveCluster {
       display: flex;
       gap: 12px;
-      pointer-events: auto;
     }
 
-    .mobile-controls button {
-      width: 62px;
+    .touchBtn {
+      width: 64px;
       height: 58px;
-      min-height: 58px;
       padding: 0;
-      border-radius: 50%;
-      font-size: 20px;
-      background: rgba(31, 55, 91, 0.82);
-      border: 3px solid rgba(255, 255, 255, 0.8);
+      pointer-events: auto;
+      background: rgba(255, 247, 209, 0.88);
+      box-shadow: 0 5px 0 #885c2c;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: none;
     }
 
     #jumpBtn {
-      width: 78px;
-      height: 78px;
-      min-height: 78px;
-      background: rgba(220, 56, 56, 0.88);
+      width: 82px;
+      background: rgba(255, 207, 61, 0.92);
     }
 
-    .music-toggle {
-      position: absolute;
-      top: 74px;
-      right: 18px;
-      z-index: 4;
-      min-height: 36px;
-      padding: 7px 12px;
-      border: 3px solid rgba(255, 255, 255, 0.85);
-      border-radius: 8px;
-      font-size: 14px;
-      background: rgba(31, 55, 91, 0.86);
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (hover: none), (max-width: 760px) {
-      body {
-        align-items: start;
-      }
-
-      .shell {
+    @media (max-width: 780px), (pointer: coarse) {
+      #gameShell {
         width: 100vw;
-        padding: 6px;
+        max-height: 100vh;
+        border-width: 0;
+        box-shadow: none;
       }
 
-      .game-frame {
-        margin-top: 4px;
-      }
-
-      .mobile-controls {
+      #mobileControls {
         display: flex;
       }
 
-      .panel {
-        padding: 16px;
-      }
-
-      .music-toggle {
-        top: 62px;
-        right: 10px;
-        font-size: 13px;
-      }
-
-      .choice-card {
-        width: 100%;
-        min-height: 128px;
-      }
-
-      .pixel-preview {
-        width: 68px;
-        height: 68px;
-      }
-
-      .mobile-controls button {
-        width: 58px;
-        height: 54px;
-        min-height: 54px;
-        font-size: 18px;
-      }
-
-      #jumpBtn {
-        width: 74px;
-        height: 74px;
-        min-height: 74px;
-      }
-
-      .answer-grid button {
-        min-width: min(132px, 42vw);
-        font-size: 16px;
-      }
-
-      h1 {
-        font-size: clamp(26px, 8vw, 44px);
-      }
-
-      h2 {
-        font-size: clamp(22px, 7vw, 32px);
-      }
-    }
-
-    @media (max-height: 520px) and (orientation: landscape) {
-      .shell {
-        width: min(100vw, 960px);
-        padding: 2px;
-      }
-
-      .game-frame {
-        max-height: 100dvh;
-        width: min(100vw, calc(100dvh * 16 / 9));
-        margin: 0 auto;
-      }
-
-      .mobile-controls {
-        padding: 0 12px;
-        bottom: 8px;
-      }
-
-      .music-toggle {
-        top: 56px;
+      .characterGrid,
+      .answerGrid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <section class="game-frame" aria-label="Super Math World: Number Kingdom game">
-      <canvas id="gameCanvas" width="960" height="540"></canvas>
-      <button id="musicBtn" class="music-toggle" type="button" aria-pressed="true">音乐 开</button>
-      <audio id="gameMusic" src="pixel-quest-run.mp3" loop preload="auto"></audio>
+  <main id="gameShell" aria-label="Super Math World: Number Kingdom">
+    <canvas id="gameCanvas" width="960" height="540"></canvas>
 
-      <div id="startScreen" class="overlay active">
-        <div class="panel">
-          <h1>Super Math World:<br />Number Kingdom</h1>
-          <p class="tagline">Y1 十位世界。撞问号砖块答题，答对加分，集满 50 分进入管道通关。</p>
-          <div class="button-row">
-            <button id="startBtn" class="primary">开始游戏</button>
-          </div>
-          <p class="hud-note">键盘：左右方向键移动，Space 跳跃</p>
-        </div>
+    <section id="startScreen" class="screen active">
+      <div class="panel">
+        <h1>Super Math World:<br>Number Kingdom</h1>
+        <p class="subtitle">Y1 十位世界 0-99</p>
+        <button id="startBtn" class="primaryBtn" type="button">开始游戏</button>
       </div>
+    </section>
 
-      <div id="characterScreen" class="overlay">
-        <div class="panel">
-          <h2>选择角色</h2>
-          <div class="choice-grid">
-            <button class="choice-card selected" data-character="mario" aria-label="选择 Mario 风格角色">
-              <canvas class="pixel-preview" width="92" height="92" data-preview="mario"></canvas>
-              <strong>Red Jumper</strong>
-            </button>
-            <button class="choice-card" data-character="luigi" aria-label="选择 Luigi 风格角色">
-              <canvas class="pixel-preview" width="92" height="92" data-preview="luigi"></canvas>
-              <strong>Green Jumper</strong>
-            </button>
-          </div>
-          <div class="button-row" style="margin-top: 18px;">
-            <button id="playBtn" class="primary">进入十位世界</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="questionScreen" class="overlay">
-        <div class="panel">
-          <h2 id="questionTitle">数学挑战</h2>
-          <p id="questionText" class="tagline"></p>
-          <div id="answerGrid" class="answer-grid"></div>
-          <p id="feedback" class="feedback"></p>
-        </div>
-      </div>
-
-      <div id="successScreen" class="overlay">
-        <div class="panel">
-          <h1>Level Clear!</h1>
-          <p class="tagline">你完成了 Y1 十位世界。</p>
-          <div class="button-row">
-            <button id="restartWinBtn" class="primary">再玩一次</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="gameOverScreen" class="overlay">
-        <div class="panel">
-          <h1>Game Over</h1>
-          <p class="tagline">生命用完了，再挑战一次吧。</p>
-          <div class="button-row">
-            <button id="restartLoseBtn" class="primary">重新开始</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="mobile-controls" aria-label="手机控制按钮">
-        <div class="mobile-cluster">
-          <button id="leftBtn" aria-label="左">左</button>
-          <button id="rightBtn" aria-label="右">右</button>
-        </div>
-        <div class="mobile-cluster">
-          <button id="jumpBtn" aria-label="跳">跳</button>
+    <section id="characterScreen" class="screen">
+      <div class="panel">
+        <h2>选择角色</h2>
+        <div class="characterGrid">
+          <button class="characterCard" type="button" data-character="red">
+            <span class="pixelHero red" aria-hidden="true">
+              <span class="hat"></span><span class="face"></span><span class="body"></span><span class="legA"></span><span class="legB"></span>
+            </span>
+            红帽像素小勇士
+          </button>
+          <button class="characterCard" type="button" data-character="green">
+            <span class="pixelHero green" aria-hidden="true">
+              <span class="hat"></span><span class="face"></span><span class="body"></span><span class="legA"></span><span class="legB"></span>
+            </span>
+            绿帽像素小勇士
+          </button>
         </div>
       </div>
     </section>
+
+    <section id="successScreen" class="screen">
+      <div class="panel">
+        <h1>成功通关！</h1>
+        <p class="subtitle">你完成了 Y1 十位世界。</p>
+        <button id="playAgainBtn" class="primaryBtn" type="button">再玩一次</button>
+      </div>
+    </section>
+
+    <section id="gameOverScreen" class="screen">
+      <div class="panel">
+        <h1>再试一次！</h1>
+        <p class="subtitle">Number Kingdom 还在等你。</p>
+        <button id="retryBtn" class="primaryBtn" type="button">重新开始</button>
+      </div>
+    </section>
+
+    <section id="questionModal" class="modalShade" aria-modal="true">
+      <div class="questionPanel">
+        <p id="questionType"></p>
+        <p id="questionText"></p>
+        <div id="answerGrid" class="answerGrid"></div>
+      </div>
+    </section>
+
+    <nav id="mobileControls" aria-label="手机控制">
+      <div class="moveCluster">
+        <button id="leftBtn" class="touchBtn" type="button">左</button>
+        <button id="rightBtn" class="touchBtn" type="button">右</button>
+      </div>
+      <button id="jumpBtn" class="touchBtn" type="button">跳</button>
+    </nav>
   </main>
 
   <script>
     "use strict";
 
-    // ============================================================
+    // =========================
     // CONFIG
-    // ============================================================
+    // =========================
     const CONFIG = {
-      canvasWidth: 960,
-      canvasHeight: 540,
-      worldWidth: 2460,
+      width: 960,
+      height: 540,
+      worldWidth: 2600,
+      groundY: 462,
       gravity: 0.72,
-      moveSpeed: 4.2,
-      jumpPower: 15.8,
-      maxFallSpeed: 18,
-      groundY: 468,
-      tile: 36,
-      passScore: 50,
+      friction: 0.84,
+      moveSpeed: 0.72,
+      maxSpeed: 6.2,
+      jumpPower: 15.2,
+      scoreGoal: 50,
       maxHearts: 3,
-      playerWidth: 34,
-      playerHeight: 48,
-      questionDelay: 650,
-      enemyDamageCooldown: 1200,
-      skyImagePath: "sky.png",
-      colors: {
-        brick: "#b8642a",
-        brickDark: "#7c391c",
-        dirt: "#9c6429",
-        grass: "#38a84f",
-        coin: "#ffd23b",
-        coinDark: "#b67b00",
-        pipe: "#2aa84f",
-        pipeDark: "#137632",
-        block: "#f5b737",
-        blockEdge: "#9a6016",
-        cloud: "rgba(255,255,255,0.78)"
-      }
+      tile: 48,
+      cameraPadding: 330
     };
 
-    // ============================================================
-    // GAME STATE
-    // ============================================================
+    const COLORS = {
+      outline: "#14283f",
+      dirt: "#8e5127",
+      dirtDark: "#5e351e",
+      grass: "#36b552",
+      grassLight: "#7ce05d",
+      brick: "#c96a2c",
+      brickLight: "#e99a42",
+      question: "#f6c63a",
+      questionLight: "#ffe46f",
+      coin: "#ffd43b",
+      coinDark: "#c98712",
+      pipe: "#22a657",
+      pipeDark: "#0e6836",
+      pipeLight: "#67d86d"
+    };
+
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const screens = {
-      start: document.getElementById("startScreen"),
-      character: document.getElementById("characterScreen"),
-      question: document.getElementById("questionScreen"),
-      success: document.getElementById("successScreen"),
-      gameOver: document.getElementById("gameOverScreen")
-    };
-    const questionTitle = document.getElementById("questionTitle");
-    const questionText = document.getElementById("questionText");
-    const answerGrid = document.getElementById("answerGrid");
-    const feedback = document.getElementById("feedback");
-    const skyImage = new Image();
-    skyImage.src = CONFIG.skyImagePath;
+    ctx.imageSmoothingEnabled = false;
 
+    const skyImage = new Image();
+    skyImage.src = "sky.png";
+
+    // =========================
+    // GAME STATE
+    // =========================
     const game = {
-      mode: "start",
-      character: "mario",
+      screen: "start",
+      selectedCharacter: "red",
       score: 0,
       hearts: CONFIG.maxHearts,
-      coins: 0,
       cameraX: 0,
-      animationTime: 0,
+      time: 0,
       lastTime: 0,
+      questionOpen: false,
       currentQuestion: null,
-      questionSource: "block",
-      activeBlock: null,
-      activeEnemy: null,
-      enemyHitAt: 0,
-      musicOn: true,
-      message: "Y1 十位世界",
-      messageUntil: 0,
-      won: false
+      feedback: "",
+      feedbackTimer: 0
     };
 
-    function showScreen(name) {
-      Object.values(screens).forEach((screen) => screen.classList.remove("active"));
-      if (screens[name]) screens[name].classList.add("active");
-      game.mode = name === "start" || name === "character" ? name : game.mode;
-    }
+    let player;
+    let enemies = [];
+    let coins = [];
+    let blocks = [];
+    let platforms = [];
+    let pipe;
 
-    function hideScreens() {
-      Object.values(screens).forEach((screen) => screen.classList.remove("active"));
+    function showScreen(name) {
+      game.screen = name;
+      document.querySelectorAll(".screen").forEach((screen) => {
+        screen.classList.toggle("active", screen.id === `${name}Screen`);
+      });
     }
 
     function resetGame() {
-      game.mode = "playing";
       game.score = 0;
       game.hearts = CONFIG.maxHearts;
-      game.coins = 0;
       game.cameraX = 0;
+      game.time = 0;
+      game.questionOpen = false;
       game.currentQuestion = null;
-      game.questionSource = "block";
-      game.activeBlock = null;
-      game.activeEnemy = null;
-      game.enemyHitAt = 0;
-      game.message = "撞问号砖块回答数学题";
-      game.messageUntil = performance.now() + 2600;
-      game.won = false;
-      resetPlayer();
-      resetCoins();
-      resetBlocks();
-      resetEnemies();
-      hideScreens();
-      if (game.musicOn) startMusic();
+      game.feedback = "";
+      game.feedbackTimer = 0;
+      initPlayer();
+      initEnemies();
+      initCoins();
+      initBlocks();
+      initPipe();
+      closeQuestion();
+      showScreen("game");
     }
 
-    function setTemporaryMessage(text, duration = 1800) {
-      game.message = text;
-      game.messageUntil = performance.now() + duration;
-    }
-
-    // ============================================================
-    // AUDIO
-    // ============================================================
-    const audio = {
-      context: null,
-      master: null,
-      ready: true
-    };
-    const musicBtn = document.getElementById("musicBtn");
-    const gameMusic = document.getElementById("gameMusic");
-    gameMusic.volume = 0.38;
-
-    function ensureAudio() {
-      if (audio.context) return;
-      const AudioCtor = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtor) {
-        game.musicOn = false;
-        musicBtn.textContent = "音乐 不支持";
-        musicBtn.disabled = true;
-        return;
-      }
-      audio.context = new AudioCtor();
-      audio.master = audio.context.createGain();
-      audio.master.gain.value = 0.24;
-      audio.master.connect(audio.context.destination);
-    }
-
-    function playTone(frequency, duration = 0.14, type = "square", volume = 0.18) {
-      ensureAudio();
-      if (!audio.context || !audio.master) return;
-      const now = audio.context.currentTime;
-      const oscillator = audio.context.createOscillator();
-      const gain = audio.context.createGain();
-      oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency, now);
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(volume, now + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      oscillator.connect(gain);
-      gain.connect(audio.master);
-      oscillator.start(now);
-      oscillator.stop(now + duration + 0.03);
-    }
-
-    function startMusic() {
-      ensureAudio();
-      if (audio.context) audio.context.resume();
-      game.musicOn = true;
-      musicBtn.textContent = "音乐 开";
-      musicBtn.setAttribute("aria-pressed", "true");
-      const playPromise = gameMusic.play();
-      if (playPromise) {
-        playPromise.catch(() => {
-          game.musicOn = false;
-          musicBtn.textContent = "点我播放音乐";
-          musicBtn.setAttribute("aria-pressed", "false");
-        });
-      }
-    }
-
-    function stopMusic() {
-      game.musicOn = false;
-      musicBtn.textContent = "音乐 关";
-      musicBtn.setAttribute("aria-pressed", "false");
-      gameMusic.pause();
-    }
-
-    function toggleMusic() {
-      if (game.musicOn) stopMusic();
-      else startMusic();
-    }
-
-    function playSfx(kind) {
-      const sounds = {
-        coin: [[1047, 0.06], [1568, 0.08], [2093, 0.1]],
-        jump: [[392, 0.08], [523, 0.1]],
-        correct: [[659, 0.07], [880, 0.08], [1175, 0.09], [1568, 0.15]],
-        wrong: [[220, 0.16], [165, 0.2]],
-        hit: [[196, 0.11], [147, 0.14]]
-      };
-      (sounds[kind] || []).forEach(([frequency, duration], index) => {
-        setTimeout(() => playTone(frequency, duration, kind === "coin" ? "triangle" : "square", 0.42), index * 70);
-      });
-    }
-
-    // ============================================================
+    // =========================
     // QUESTION BANK
-    // ============================================================
-    function randInt(min, max) {
+    // =========================
+    const QUESTION_TYPES = [
+      makePlaceValueQuestion,
+      makeRoundingQuestion,
+      makePatternQuestion,
+      makeCompareQuestion,
+      makeAscendingQuestion,
+      makeDescendingQuestion
+    ];
+
+    function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function shuffle(items) {
-      const copy = items.slice();
-      for (let i = copy.length - 1; i > 0; i -= 1) {
-        const j = randInt(0, i);
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
+    function shuffle(list) {
+      return list
+        .map((value) => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map((item) => item.value);
     }
 
-    function uniqueChoices(answer, choices) {
-      const pool = [answer, ...choices].filter((value) => value >= 0 && value <= 99);
-      const unique = [];
-      pool.forEach((value) => {
-        if (!unique.includes(value)) unique.push(value);
-      });
-      while (unique.length < 4) {
-        const next = Math.max(0, Math.min(99, answer + randInt(-18, 18)));
-        if (!unique.includes(next)) unique.push(next);
-      }
-      return shuffle(unique.slice(0, 4));
+    function uniqueNumbers(count, min, max) {
+      const set = new Set();
+      while (set.size < count) set.add(randomInt(min, max));
+      return [...set];
     }
 
-    function tenChoices(answer) {
-      const candidates = [answer, answer - 10, answer + 10, answer - 20, answer + 20, answer - 30, answer + 30];
-      const unique = [];
-      candidates.forEach((value) => {
-        if (value >= 0 && value <= 90 && value % 10 === 0 && !unique.includes(value)) unique.push(value);
+    function makeNumberOptions(answer, min, max, step = 1) {
+      const values = new Set([answer]);
+      const deltas = shuffle([step, -step, step * 2, -step * 2, step * 3, -step * 3, step * 4, -step * 4]);
+      deltas.forEach((delta) => {
+        const next = answer + delta;
+        if (next >= min && next <= max) values.add(next);
       });
-      while (unique.length < 4) {
-        const next = randInt(0, 9) * 10;
-        if (!unique.includes(next)) unique.push(next);
-      }
-      return shuffle(unique.slice(0, 4));
+      while (values.size < 4) values.add(randomInt(min, max));
+      return shuffle([...values]).slice(0, 4);
     }
 
-    function digitChoices(answer) {
-      const candidates = [answer, answer - 1, answer + 1, answer - 2, answer + 2, answer - 3, answer + 3];
-      const unique = [];
-      candidates.forEach((value) => {
-        if (value >= 0 && value <= 9 && !unique.includes(value)) unique.push(value);
-      });
-      while (unique.length < 4) {
-        const next = randInt(0, 9);
-        if (!unique.includes(next)) unique.push(next);
-      }
-      return shuffle(unique.slice(0, 4));
+    function makeQuestion() {
+      return QUESTION_TYPES[randomInt(0, QUESTION_TYPES.length - 1)]();
     }
 
     function makePlaceValueQuestion() {
-      const number = randInt(10, 99);
-      const askTens = Math.random() > 0.45;
-      const answer = askTens ? Math.floor(number / 10) : number % 10;
+      const number = randomInt(10, 99);
+      const askTens = Math.random() > 0.35;
+      const answer = askTens ? Math.floor(number / 10) * 10 : number % 10;
       return {
-        title: "数位数值",
-        text: askTens ? `${number} 里面有几个十？` : `${number} 的个位数字是几？`,
+        type: "数位数值",
+        text: askTens ? `${number} 的十位数值是多少？` : `${number} 的个位数值是多少？`,
         answer: String(answer),
-        choices: digitChoices(answer).map(String)
+        choices: makeNumberOptions(answer, askTens ? 0 : 0, askTens ? 90 : 9, askTens ? 10 : 1).map(String)
       };
     }
 
     function makeRoundingQuestion() {
-      const number = randInt(0, 94);
-      const answer = Math.min(100, Math.round(number / 10) * 10);
+      const number = randomInt(0, 94);
+      const answer = Math.round(number / 10) * 10;
       return {
-        title: "十位近似值",
-        text: `${number} 的十位近似值是？`,
+        type: "近似值",
+        text: `${number} 最接近哪一个十位数？`,
         answer: String(answer),
-        choices: tenChoices(answer).map(String)
+        choices: makeNumberOptions(answer, 0, 90, 10).map(String)
       };
     }
 
     function makePatternQuestion() {
       const step = shuffle([2, 5, 10])[0];
-      const start = randInt(0, 99 - step * 4);
-      const sequence = [start, start + step, start + step * 2, start + step * 3];
-      const answer = start + step * 4;
+      const start = randomInt(0, 99 - step * 4);
+      const answer = start + step * 3;
       return {
-        title: "数列规律",
-        text: `${sequence.join("，")}，接下来是几？`,
+        type: "数列规律",
+        text: `找规律：${start}, ${start + step}, ${start + step * 2}, __`,
         answer: String(answer),
-        choices: uniqueChoices(answer, [answer + step, answer - step, answer + 1, answer - 1]).map(String)
-      };
-    }
-
-    function makeBeforeAfterQuestion() {
-      const direction = shuffle(["加10", "减10", "前一个数", "后一个数"])[0];
-      let number = randInt(10, 89);
-      let answer = number;
-      if (direction === "加10") answer = number + 10;
-      if (direction === "减10") answer = number - 10;
-      if (direction === "前一个数") answer = number - 1;
-      if (direction === "后一个数") answer = number + 1;
-      let text = `${number} 前面的一个数是？`;
-      if (direction === "后一个数") text = `${number} 后面的一个数是？`;
-      if (direction === "加10") text = `${number} + 10 = ?`;
-      if (direction === "减10") text = `${number} - 10 = ?`;
-      return {
-        title: "前后与十位",
-        text,
-        answer: String(answer),
-        choices: uniqueChoices(answer, [answer + 10, answer - 10, answer + 1, answer - 1]).map(String)
-      };
-    }
-
-    function makeComposeNumberQuestion() {
-      const tens = randInt(1, 9);
-      const ones = randInt(0, 9);
-      const answer = tens * 10 + ones;
-      return {
-        title: "数位组成",
-        text: `${tens} 个十和 ${ones} 个一组成多少？`,
-        answer: String(answer),
-        choices: uniqueChoices(answer, [answer + 10, answer - 10, tens + ones, tens * 10]).map(String)
-      };
-    }
-
-    function makeMissingTensQuestion() {
-      const start = randInt(0, 5) * 10 + randInt(0, 4);
-      const answer = start + 20;
-      return {
-        title: "数列规律",
-        text: `${start}，${start + 10}，?，${start + 30}，少了哪个数？`,
-        answer: String(answer),
-        choices: uniqueChoices(answer, [answer + 10, answer - 10, answer + 1, answer - 1]).map(String)
+        choices: makeNumberOptions(answer, 0, 99, step).map(String)
       };
     }
 
     function makeCompareQuestion() {
-      let a = randInt(0, 99);
-      let b = randInt(0, 99);
-      while (a === b) b = randInt(0, 99);
-      const answer = a > b ? "大" : "小";
+      const a = randomInt(0, 99);
+      const b = randomInt(0, 99);
+      const answer = a > b ? ">" : a < b ? "<" : "=";
       return {
-        title: "比较大小",
-        text: `${a} 比 ${b} 大还是小？`,
+        type: "比较大小",
+        text: `${a} __ ${b}`,
         answer,
-        choices: shuffle(["大", "小"])
+        choices: shuffle([">", "<", "="])
       };
     }
 
-    function makeOrderQuestion(ascending = true) {
-      const numbers = [];
-      while (numbers.length < 4) {
-        const n = randInt(0, 99);
-        if (!numbers.includes(n)) numbers.push(n);
-      }
-      const answerNumbers = numbers.slice().sort((a, b) => ascending ? a - b : b - a);
-      const answer = answerNumbers.join("，");
-      const wrongA = numbers.slice().reverse().join("，");
-      const wrongB = shuffle(numbers).join("，");
-      const wrongC = numbers.slice().sort((a, b) => ascending ? b - a : a - b).join("，");
-      const choiceSet = new Set([answer, wrongA, wrongB, wrongC]);
-      while (choiceSet.size < 4) choiceSet.add(shuffle(numbers).join("，"));
-      const choices = shuffle([...choiceSet]);
+    function makeAscendingQuestion() {
+      const numbers = uniqueNumbers(3, 0, 99);
+      const answer = [...numbers].sort((a, b) => a - b).join(", ");
+      const wrongA = [numbers[1], numbers[0], numbers[2]].join(", ");
+      const wrongB = [...numbers].sort((a, b) => b - a).join(", ");
+      const wrongC = [numbers[0], numbers[2], numbers[1]].join(", ");
       return {
-        title: ascending ? "顺序排列" : "逆序排列",
-        text: `把 ${numbers.join("，")} 按${ascending ? "从小到大" : "从大到小"}排列。`,
+        type: "顺序排列",
+        text: `从小到大排列：${numbers.join(", ")}`,
         answer,
-        choices: shuffle(choices.slice(0, 4))
+        choices: shuffle([...new Set([answer, wrongA, wrongB, wrongC])])
       };
     }
 
-    function makeEnemyExpressionQuestion() {
-      const base = randInt(20, 79);
-      const change = shuffle([-20, -10, 10, 20])[0];
-      const answer = base + change;
+    function makeDescendingQuestion() {
+      const numbers = uniqueNumbers(3, 0, 99);
+      const answer = [...numbers].sort((a, b) => b - a).join(", ");
+      const wrongA = [...numbers].sort((a, b) => a - b).join(", ");
+      const wrongB = [numbers[1], numbers[2], numbers[0]].join(", ");
+      const wrongC = [numbers[2], numbers[0], numbers[1]].join(", ");
       return {
-        title: "怪物挑战",
-        text: `${base} ${change > 0 ? "+" : "-"} ${Math.abs(change)} = ?`,
-        answer: String(answer),
-        choices: uniqueChoices(answer, [answer + 10, answer - 10, answer + 1, answer - 1]).map(String)
+        type: "逆序排列",
+        text: `从大到小排列：${numbers.join(", ")}`,
+        answer,
+        choices: shuffle([...new Set([answer, wrongA, wrongB, wrongC])])
       };
     }
 
-    function makeEnemyGreatestQuestion() {
-      const numbers = [];
-      while (numbers.length < 4) {
-        const n = randInt(0, 99);
-        if (!numbers.includes(n)) numbers.push(n);
-      }
-      const askGreatest = Math.random() > 0.5;
-      const answer = askGreatest ? Math.max(...numbers) : Math.min(...numbers);
-      return {
-        title: "怪物挑战",
-        text: `从 ${numbers.join("，")} 中选出${askGreatest ? "最大" : "最小"}的数。`,
-        answer: String(answer),
-        choices: shuffle(numbers).map(String)
-      };
-    }
-
-    function makeEnemyMiddlePatternQuestion() {
-      const step = shuffle([5, 10])[0];
-      const start = randInt(0, 99 - step * 4);
-      const answer = start + step * 2;
-      return {
-        title: "怪物挑战",
-        text: `${start}，${start + step}，?，${start + step * 3}，${start + step * 4}，少了哪个数？`,
-        answer: String(answer),
-        choices: uniqueChoices(answer, [answer + step, answer - step, answer + 10, answer - 10]).map(String)
-      };
-    }
-
-    const QUESTION_BANK = [
-      makePlaceValueQuestion,
-      makeRoundingQuestion,
-      makePatternQuestion,
-      makeCompareQuestion,
-      makeBeforeAfterQuestion,
-      makeComposeNumberQuestion,
-      makeMissingTensQuestion,
-      () => makeOrderQuestion(true),
-      () => makeOrderQuestion(false)
-    ];
-
-    const ENEMY_QUESTION_BANK = [
-      makeEnemyExpressionQuestion,
-      makeEnemyGreatestQuestion,
-      makeEnemyMiddlePatternQuestion,
-      () => makeOrderQuestion(true),
-      () => makeOrderQuestion(false)
-    ];
-
-    function createQuestion(difficulty = "normal") {
-      const bank = difficulty === "enemy" ? ENEMY_QUESTION_BANK : QUESTION_BANK;
-      return shuffle(bank)[0]();
-    }
-
-    function openQuestion(block) {
-      if (game.mode !== "playing" || block.used) return;
-      block.bump = 16;
-      block.used = true;
-      game.activeBlock = block;
-      game.activeEnemy = null;
-      game.questionSource = "block";
-      game.currentQuestion = createQuestion("normal");
-      showQuestion();
-    }
-
-    function openEnemyQuestion(enemy) {
-      const now = performance.now();
-      if (game.mode !== "playing" || enemy.defeated || player.invincibleUntil > now) return;
-      game.activeBlock = null;
-      game.activeEnemy = enemy;
-      game.questionSource = "enemy";
-      game.currentQuestion = createQuestion("enemy");
-      player.vx = enemy.x < player.x ? 4 : -4;
-      player.vy = -6;
-      showQuestion();
-    }
-
-    function showQuestion() {
-      game.mode = "question";
-      questionTitle.textContent = game.currentQuestion.title;
-      questionText.textContent = game.currentQuestion.text;
-      feedback.textContent = "";
-      answerGrid.innerHTML = "";
+    function openQuestion() {
+      game.questionOpen = true;
+      game.currentQuestion = makeQuestion();
+      const modal = document.getElementById("questionModal");
+      const type = document.getElementById("questionType");
+      const text = document.getElementById("questionText");
+      const grid = document.getElementById("answerGrid");
+      type.textContent = game.currentQuestion.type;
+      text.textContent = game.currentQuestion.text;
+      grid.innerHTML = "";
       game.currentQuestion.choices.forEach((choice) => {
         const button = document.createElement("button");
+        button.className = "answerBtn";
         button.type = "button";
         button.textContent = choice;
         button.addEventListener("click", () => answerQuestion(choice));
-        answerGrid.appendChild(button);
+        grid.appendChild(button);
       });
-      screens.question.classList.add("active");
+      modal.classList.add("active");
+    }
+
+    function closeQuestion() {
+      document.getElementById("questionModal").classList.remove("active");
     }
 
     function answerQuestion(choice) {
       if (!game.currentQuestion) return;
-      const correct = choice === game.currentQuestion.answer;
-      [...answerGrid.children].forEach((button) => {
-        button.disabled = true;
-        if (button.textContent === game.currentQuestion.answer) button.style.background = "#2f9f5b";
-        if (button.textContent === choice && !correct) button.style.background = "#d93636";
-      });
-
-      if (correct) {
+      if (choice === game.currentQuestion.answer) {
         game.score += 10;
-        feedback.textContent = game.questionSource === "enemy"
-          ? "答对了！怪物退散，+10 分"
-          : "答对了！+10 分";
-        playSfx("correct");
-        if (game.questionSource === "enemy" && game.activeEnemy) {
-          game.activeEnemy.defeated = true;
-          game.activeEnemy.x = game.activeEnemy.maxX + 1000;
-        }
+        game.feedback = "+10 答对了！";
       } else {
-        if (game.questionSource === "enemy" && game.activeEnemy) {
-          damagePlayer(game.activeEnemy);
-        } else {
-          game.hearts -= 1;
-          playSfx("wrong");
-        }
-        feedback.textContent = `答错了。答案是 ${game.currentQuestion.answer}`;
+        loseHeart();
+        game.feedback = `答案：${game.currentQuestion.answer}`;
       }
-
-      setTimeout(() => {
-        screens.question.classList.remove("active");
-        game.currentQuestion = null;
-        game.activeEnemy = null;
-        game.questionSource = "block";
-        game.mode = game.hearts <= 0 ? "gameOver" : "playing";
-        if (game.hearts <= 0) screens.gameOver.classList.add("active");
-        else if (correct && game.score >= CONFIG.passScore) setTemporaryMessage("够 50 分了，去管道！");
-        else setTemporaryMessage(correct ? "继续寻找下一块问号砖" : "小心，少了一颗心");
-      }, CONFIG.questionDelay);
+      game.feedbackTimer = 100;
+      game.questionOpen = false;
+      game.currentQuestion = null;
+      closeQuestion();
     }
 
-    // ============================================================
+    // =========================
     // PLAYER
-    // ============================================================
-    const player = {
-      x: 170,
-      y: 250,
-      width: CONFIG.playerWidth,
-      height: CONFIG.playerHeight,
-      vx: 0,
-      vy: 0,
-      onGround: false,
-      facing: 1,
-      walkFrame: 0,
-      invincibleUntil: 0
+    // =========================
+    const CHARACTER_STYLES = {
+      red: { hat: "#e43a2d", shirt: "#e43a2d", pants: "#2446a5", skin: "#ffd19b" },
+      green: { hat: "#2eb85d", shirt: "#2eb85d", pants: "#2446a5", skin: "#ffd19b" }
     };
 
-    function resetPlayer() {
-      player.x = 170;
-      player.y = 250;
-      player.vx = 0;
-      player.vy = 0;
+    function initPlayer() {
+      player = {
+        x: 70,
+        y: CONFIG.groundY - 62,
+        prevX: 70,
+        prevY: CONFIG.groundY - 62,
+        w: 34,
+        h: 62,
+        vx: 0,
+        vy: 0,
+        face: 1,
+        onGround: false,
+        invincible: 0
+      };
+
+      platforms = [
+        { x: 420, y: 348, w: 190, h: 26 },
+        { x: 910, y: 315, w: 170, h: 26 },
+        { x: 1370, y: 355, w: 210, h: 26 },
+        { x: 1810, y: 318, w: 180, h: 26 }
+      ];
+    }
+
+    function updatePlayer() {
+      player.prevX = player.x;
+      player.prevY = player.y;
+
+      if (input.left) player.vx -= CONFIG.moveSpeed;
+      if (input.right) player.vx += CONFIG.moveSpeed;
+      if (!input.left && !input.right) player.vx *= CONFIG.friction;
+
+      player.vx = Math.max(-CONFIG.maxSpeed, Math.min(CONFIG.maxSpeed, player.vx));
+      if (Math.abs(player.vx) > 0.2) player.face = player.vx > 0 ? 1 : -1;
+
+      if (input.jumpPressed && player.onGround) {
+        player.vy = -CONFIG.jumpPower;
+        player.onGround = false;
+      }
+      input.jumpPressed = false;
+
+      player.vy += CONFIG.gravity;
+      player.x += player.vx;
+      player.y += player.vy;
+      player.x = Math.max(0, Math.min(CONFIG.worldWidth - player.w, player.x));
+
+      resolvePlatformCollisions();
+
+      if (player.y + player.h >= CONFIG.groundY) {
+        player.y = CONFIG.groundY - player.h;
+        player.vy = 0;
+        player.onGround = true;
+      }
+
+      if (player.invincible > 0) player.invincible -= 1;
+    }
+
+    function resolvePlatformCollisions() {
       player.onGround = false;
-      player.facing = 1;
-      player.walkFrame = 0;
-      player.invincibleUntil = 0;
-    }
+      platforms.forEach((platform) => {
+        if (!rectsOverlap(player, platform)) return;
+        const wasAbove = player.prevY + player.h <= platform.y;
+        const wasBelow = player.prevY >= platform.y + platform.h;
 
-    function drawPixelCharacter(targetCtx, x, y, scale, character, frame = 0, facing = 1, alpha = 1) {
-      const palette = character === "luigi"
-        ? { hat: "#21a85a", hatLight: "#69e08c", shirt: "#2fc86a", overalls: "#245bd1", overallsLight: "#4f88ff", skin: "#f4bd86", shoe: "#3b2418", hair: "#4a2a16", scarf: "#ffd447", badge: "#ff6b81", sparkle: "#fff176" }
-        : { hat: "#f04444", hatLight: "#ff8a82", shirt: "#ff5a4f", overalls: "#2768d8", overallsLight: "#55a0ff", skin: "#f4bd86", shoe: "#3b2418", hair: "#4a2a16", scarf: "#ffd447", badge: "#37d6ff", sparkle: "#fff176" };
-      const bob = Math.abs(frame % 20 - 10) > 5 ? 1 : 0;
-      const s = scale;
-      const rootX = x + (facing < 0 ? 14 * s : 0);
-      const rootY = y + bob * s;
-      const roundRect = (rx, ry, rw, rh, radius, color) => {
-        targetCtx.fillStyle = color;
-        targetCtx.beginPath();
-        targetCtx.moveTo(rx + radius, ry);
-        targetCtx.lineTo(rx + rw - radius, ry);
-        targetCtx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + radius);
-        targetCtx.lineTo(rx + rw, ry + rh - radius);
-        targetCtx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - radius, ry + rh);
-        targetCtx.lineTo(rx + radius, ry + rh);
-        targetCtx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - radius);
-        targetCtx.lineTo(rx, ry + radius);
-        targetCtx.quadraticCurveTo(rx, ry, rx + radius, ry);
-        targetCtx.fill();
-      };
-      const ellipse = (cx, cy, rx, ry, color) => {
-        targetCtx.fillStyle = color;
-        targetCtx.beginPath();
-        targetCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-        targetCtx.fill();
-      };
-      const star = (cx, cy, radius, color) => {
-        targetCtx.fillStyle = color;
-        targetCtx.beginPath();
-        for (let i = 0; i < 10; i += 1) {
-          const angle = -Math.PI / 2 + i * Math.PI / 5;
-          const r = i % 2 === 0 ? radius : radius * 0.45;
-          const sx = cx + Math.cos(angle) * r;
-          const sy = cy + Math.sin(angle) * r;
-          if (i === 0) targetCtx.moveTo(sx, sy);
-          else targetCtx.lineTo(sx, sy);
+        if (wasAbove && player.vy >= 0) {
+          player.y = platform.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+        } else if (wasBelow && player.vy < 0) {
+          player.y = platform.y + platform.h;
+          player.vy = 1.5;
         }
-        targetCtx.closePath();
-        targetCtx.fill();
-      };
-
-      targetCtx.save();
-      targetCtx.globalAlpha = alpha;
-      targetCtx.translate(rootX, rootY);
-      targetCtx.scale(facing, 1);
-
-      ellipse(7 * s, 15.2 * s, 5.2 * s, 1.1 * s, "rgba(0,0,0,0.18)");
-
-      const headGrad = targetCtx.createRadialGradient(5.2 * s, 3.5 * s, 0.4 * s, 7 * s, 4.8 * s, 4.9 * s);
-      headGrad.addColorStop(0, "#ffe0b5");
-      headGrad.addColorStop(0.68, palette.skin);
-      headGrad.addColorStop(1, "#d98b55");
-      ellipse(7 * s, 4.5 * s, 4.2 * s, 3.6 * s, headGrad);
-
-      roundRect(3.1 * s, 0.8 * s, 7.8 * s, 2.3 * s, 1.1 * s, palette.hat);
-      roundRect(1.4 * s, 2.1 * s, 10.5 * s, 1.35 * s, 0.65 * s, palette.hat);
-      ellipse(6.1 * s, 1.45 * s, 1.2 * s, 0.45 * s, palette.hatLight);
-      roundRect(6.4 * s, 1.55 * s, 2.1 * s, 1.15 * s, 0.35 * s, "#fff6d5");
-      star(10.25 * s, 1.05 * s, 0.78 * s, palette.sparkle);
-      targetCtx.fillStyle = palette.hat;
-      targetCtx.font = `${1.15 * s}px Arial`;
-      targetCtx.textAlign = "center";
-      targetCtx.textBaseline = "middle";
-      targetCtx.fillText(character === "luigi" ? "G" : "R", 7.45 * s, 2.15 * s);
-
-      roundRect(3.2 * s, 3.05 * s, 2.1 * s, 2.15 * s, 0.4 * s, palette.hair);
-      ellipse(5.65 * s, 4.35 * s, 0.55 * s, 0.72 * s, "#171717");
-      ellipse(8.45 * s, 4.35 * s, 0.55 * s, 0.72 * s, "#171717");
-      ellipse(5.48 * s, 4.05 * s, 0.18 * s, 0.22 * s, "#fff");
-      ellipse(8.28 * s, 4.05 * s, 0.18 * s, 0.22 * s, "#fff");
-      targetCtx.strokeStyle = "#7a3219";
-      targetCtx.lineWidth = 0.24 * s;
-      targetCtx.beginPath();
-      targetCtx.arc(7.08 * s, 5.0 * s, 0.9 * s, 0.18 * Math.PI, 0.82 * Math.PI);
-      targetCtx.stroke();
-      ellipse(4.15 * s, 5.12 * s, 0.68 * s, 0.38 * s, "#ff9aae");
-      ellipse(9.92 * s, 5.12 * s, 0.68 * s, 0.38 * s, "#ff9aae");
-
-      roundRect(2.05 * s, 7.2 * s, 2.2 * s, 4.3 * s, 0.95 * s, "#9a64ff");
-      roundRect(2.7 * s, 6.7 * s, 8.8 * s, 5.3 * s, 1.5 * s, palette.shirt);
-      roundRect(3.65 * s, 8.05 * s, 6.9 * s, 4.65 * s, 1.1 * s, palette.overalls);
-      roundRect(4.25 * s, 8.45 * s, 2.0 * s, 0.65 * s, 0.3 * s, palette.overallsLight);
-      roundRect(7.8 * s, 8.45 * s, 2.0 * s, 0.65 * s, 0.3 * s, palette.overallsLight);
-      roundRect(3.05 * s, 6.35 * s, 8.2 * s, 1.0 * s, 0.45 * s, palette.scarf);
-      ellipse(7.1 * s, 10.15 * s, 0.85 * s, 0.85 * s, palette.badge);
-      ellipse(6.85 * s, 9.9 * s, 0.22 * s, 0.22 * s, "#fff");
-      targetCtx.fillStyle = "#fff";
-      targetCtx.beginPath();
-      targetCtx.moveTo(7.1 * s, 10.55 * s);
-      targetCtx.bezierCurveTo(5.9 * s, 9.75 * s, 6.45 * s, 9.25 * s, 7.1 * s, 9.7 * s);
-      targetCtx.bezierCurveTo(7.75 * s, 9.25 * s, 8.3 * s, 9.75 * s, 7.1 * s, 10.55 * s);
-      targetCtx.fill();
-
-      const armSwing = Math.sin(frame / 5) * 0.65 * s;
-      roundRect(1.1 * s, 7.4 * s + armSwing, 2.5 * s, 3.5 * s, 1.0 * s, palette.skin);
-      roundRect(10.4 * s, 7.4 * s - armSwing, 2.5 * s, 3.5 * s, 1.0 * s, palette.skin);
-      ellipse(2.25 * s, 10.9 * s + armSwing, 1.0 * s, 0.82 * s, "#fff");
-      ellipse(11.55 * s, 10.9 * s - armSwing, 1.0 * s, 0.82 * s, "#fff");
-
-      const legSwing = Math.sin(frame / 5) * 0.45 * s;
-      roundRect(4.0 * s, 12.0 * s, 2.4 * s, 2.4 * s + Math.max(0, legSwing), 0.65 * s, palette.overalls);
-      roundRect(7.7 * s, 12.0 * s, 2.4 * s, 2.4 * s + Math.max(0, -legSwing), 0.65 * s, palette.overalls);
-      roundRect(3.35 * s, 14.0 * s + Math.max(0, legSwing), 3.25 * s, 1.0 * s, 0.45 * s, palette.shoe);
-      roundRect(7.5 * s, 14.0 * s + Math.max(0, -legSwing), 3.25 * s, 1.0 * s, 0.45 * s, palette.shoe);
-
-      targetCtx.globalAlpha = Math.min(alpha, 0.28);
-      ellipse(5.4 * s, 3.65 * s, 1.05 * s, 0.72 * s, "#fff");
-      roundRect(4.4 * s, 7.3 * s, 1.8 * s, 3.5 * s, 0.75 * s, "#fff");
-      targetCtx.globalAlpha = 1;
-      targetCtx.restore();
-    }
-
-    function drawCharacterPreviews() {
-      document.querySelectorAll("[data-preview]").forEach((preview) => {
-        const previewCtx = preview.getContext("2d");
-        const style = preview.dataset.preview;
-        previewCtx.clearRect(0, 0, preview.width, preview.height);
-        previewCtx.fillStyle = "#bdeeff";
-        previewCtx.fillRect(0, 0, preview.width, preview.height);
-        previewCtx.fillStyle = "#5fb84a";
-        previewCtx.fillRect(0, 74, preview.width, 18);
-        drawPixelCharacter(previewCtx, 14, 6, 4.6, style, 0, 1);
       });
     }
 
-    // ============================================================
+    function drawPlayer() {
+      const style = CHARACTER_STYLES[game.selectedCharacter];
+      const x = Math.round(player.x - game.cameraX);
+      const y = Math.round(player.y);
+      const blink = player.invincible > 0 && Math.floor(game.time / 6) % 2 === 0;
+      if (blink) return;
+
+      ctx.save();
+      if (player.face < 0) {
+        ctx.translate(x + player.w, 0);
+        ctx.scale(-1, 1);
+        drawPixelHero(0, y, style);
+      } else {
+        drawPixelHero(x, y, style);
+      }
+      ctx.restore();
+    }
+
+    function drawPixelHero(x, y, style) {
+      strokeRect(x + 6, y + 0, 23, 10, style.hat);
+      strokeRect(x + 3, y + 10, 29, 9, style.hat);
+      strokeRect(x + 8, y + 19, 22, 17, style.skin);
+      strokeRect(x + 22, y + 24, 5, 5, COLORS.outline);
+      strokeRect(x + 4, y + 36, 28, 24, style.shirt);
+      strokeRect(x + 1, y + 40, 8, 18, style.skin);
+      strokeRect(x + 27, y + 40, 8, 18, style.skin);
+      strokeRect(x + 6, y + 58, 10, 13, style.pants);
+      strokeRect(x + 21, y + 58, 10, 13, style.pants);
+      strokeRect(x + 4, y + 70, 13, 6, "#4b2817");
+      strokeRect(x + 20, y + 70, 13, 6, "#4b2817");
+    }
+
+    // =========================
     // ENEMIES
-    // ============================================================
-    const enemies = [];
-
-    function resetEnemies() {
-      enemies.length = 0;
-      enemies.push({
-        x: 1110,
-        y: CONFIG.groundY - 34,
-        width: 38,
-        height: 34,
-        vx: 1.25,
-        minX: 990,
-        maxX: 1280,
-        defeated: false
-      });
-      enemies.push({
-        x: 1780,
-        y: CONFIG.groundY - 34,
-        width: 38,
-        height: 34,
-        vx: -1.1,
-        minX: 1680,
-        maxX: 1920,
-        defeated: false
-      });
+    // =========================
+    function initEnemies() {
+      enemies = [
+        { x: 650, y: CONFIG.groundY - 34, w: 38, h: 34, vx: 1.3, minX: 610, maxX: 850 },
+        { x: 1600, y: CONFIG.groundY - 34, w: 38, h: 34, vx: -1.1, minX: 1500, maxX: 1760 }
+      ];
     }
 
     function updateEnemies() {
       enemies.forEach((enemy) => {
-        if (enemy.defeated) return;
         enemy.x += enemy.vx;
-        if (enemy.x < enemy.minX || enemy.x + enemy.width > enemy.maxX) enemy.vx *= -1;
+        if (enemy.x < enemy.minX || enemy.x + enemy.w > enemy.maxX) enemy.vx *= -1;
+        if (rectsOverlap(player, enemy)) {
+          hurtPlayer(enemy.x < player.x ? 1 : -1);
+        }
       });
     }
 
-    function drawEnemy(enemy) {
-      const x = Math.round(enemy.x - game.cameraX);
-      const y = Math.round(enemy.y);
-      ctx.fillStyle = "#6b3b21";
-      ctx.fillRect(x + 4, y + 10, enemy.width - 8, enemy.height - 6);
-      ctx.fillStyle = "#8e5130";
-      ctx.fillRect(x, y + 16, enemy.width, enemy.height - 12);
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(x + 8, y + 14, 7, 7);
-      ctx.fillRect(x + 23, y + 14, 7, 7);
-      ctx.fillStyle = "#111";
-      ctx.fillRect(x + 10, y + 16, 3, 3);
-      ctx.fillRect(x + 25, y + 16, 3, 3);
-      ctx.fillStyle = "#3b2418";
-      const footOffset = Math.sin(game.animationTime / 120) > 0 ? 2 : -2;
-      ctx.fillRect(x + 5, y + 31 + footOffset, 10, 5);
-      ctx.fillRect(x + 23, y + 31 - footOffset, 10, 5);
+    function drawEnemies() {
+      enemies.forEach((enemy) => {
+        const x = Math.round(enemy.x - game.cameraX);
+        const y = Math.round(enemy.y);
+        strokeRect(x + 3, y + 8, enemy.w - 6, enemy.h - 8, "#9b5a35");
+        strokeRect(x + 8, y + 2, enemy.w - 16, 12, "#b87545");
+        strokeRect(x + 10, y + 16, 5, 5, "#ffffff");
+        strokeRect(x + 23, y + 16, 5, 5, "#ffffff");
+        fillRect(x + 12, y + 18, 3, 3, COLORS.outline);
+        fillRect(x + 25, y + 18, 3, 3, COLORS.outline);
+        fillRect(x + 5, y + 30, 10, 5, COLORS.outline);
+        fillRect(x + 23, y + 30, 10, 5, COLORS.outline);
+      });
     }
 
-    function damagePlayer(source) {
-      const now = performance.now();
-      if (player.invincibleUntil > now) return;
-      game.hearts -= 1;
-      player.invincibleUntil = now + CONFIG.enemyDamageCooldown;
-      player.vx = source && source.x < player.x ? 5 : -5;
+    function hurtPlayer(direction) {
+      if (player.invincible > 0 || game.screen !== "game") return;
+      loseHeart();
+      player.invincible = 90;
+      player.vx = direction * 8;
       player.vy = -8;
-      playSfx("hit");
-      setTemporaryMessage("碰到怪物，少了一颗心");
+    }
+
+    function loseHeart() {
+      game.hearts -= 1;
       if (game.hearts <= 0) {
-        game.mode = "gameOver";
-        screens.gameOver.classList.add("active");
+        game.hearts = 0;
+        showScreen("gameOver");
       }
     }
 
-    // ============================================================
+    // =========================
     // COINS
-    // ============================================================
-    const coins = [];
-
-    function resetCoins() {
-      coins.length = 0;
-      [
-        [320, 350], [380, 350], [620, 250], [680, 250],
-        [930, 356], [1200, 300], [1450, 245], [1510, 245],
-        [1770, 360], [1880, 360]
-      ].forEach(([x, y]) => coins.push({ x, y, width: 22, height: 28, collected: false }));
+    // =========================
+    function initCoins() {
+      coins = [
+        { x: 300, y: 385 }, { x: 360, y: 360 }, { x: 470, y: 300 },
+        { x: 960, y: 260 }, { x: 1030, y: 260 }, { x: 1260, y: 390 },
+        { x: 1460, y: 304 }, { x: 1530, y: 304 }, { x: 1880, y: 270 },
+        { x: 2140, y: 385 }
+      ].map((coin) => ({ ...coin, w: 26, h: 26, collected: false }));
     }
 
     function updateCoins() {
       coins.forEach((coin) => {
         if (!coin.collected && rectsOverlap(player, coin)) {
           coin.collected = true;
-          game.coins += 1;
-          playSfx("coin");
-          setTemporaryMessage("收集金币");
+          game.score += 1;
+          game.feedback = "+1";
+          game.feedbackTimer = 45;
         }
       });
     }
 
-    function drawCoin(coin) {
-      if (coin.collected) return;
-      const pulse = Math.sin(game.animationTime / 110);
-      const w = 10 + Math.abs(pulse) * 12;
-      const x = coin.x - game.cameraX + coin.width / 2 - w / 2;
-      const y = coin.y + Math.sin(game.animationTime / 160 + coin.x) * 4;
-      ctx.fillStyle = CONFIG.colors.coinDark;
-      ctx.fillRect(x - 2, y + 2, w + 4, coin.height - 2);
-      ctx.fillStyle = CONFIG.colors.coin;
-      ctx.fillRect(x, y, w, coin.height - 4);
-      ctx.fillStyle = "rgba(255,255,255,0.75)";
-      ctx.fillRect(x + Math.max(2, w * 0.3), y + 5, Math.max(2, w * 0.18), 8);
+    function drawCoins() {
+      coins.forEach((coin, index) => {
+        if (coin.collected) return;
+        const pulse = Math.sin(game.time * 0.16 + index) * 0.35 + 0.65;
+        const width = Math.max(8, coin.w * pulse);
+        const x = Math.round(coin.x - game.cameraX + (coin.w - width) / 2);
+        const y = Math.round(coin.y + Math.sin(game.time * 0.09 + index) * 3);
+        strokeRect(x, y, width, coin.h, COLORS.coin);
+        fillRect(x + width * 0.42, y + 5, Math.max(3, width * 0.18), coin.h - 10, COLORS.coinDark);
+        fillRect(x + 5, y + 4, Math.max(3, width * 0.22), 4, "#fff4a4");
+      });
     }
 
-    // ============================================================
+    // =========================
     // BLOCKS
-    // ============================================================
-    const blocks = [];
-    const platforms = [
-      { x: 0, y: CONFIG.groundY, width: CONFIG.worldWidth, height: 72, type: "ground" },
-      { x: 560, y: 330, width: 180, height: 28, type: "platform" },
-      { x: 1380, y: 318, width: 210, height: 28, type: "platform" }
-    ];
-
-    function resetBlocks() {
-      blocks.length = 0;
-      [
-        [300, 318], [430, 318], [610, 215], [760, 306],
-        [920, 318], [1080, 318], [1260, 302], [1440, 204],
-        [1580, 204], [1740, 318], [1920, 318], [2080, 308]
-      ].forEach(([x, y]) => blocks.push({
-        x,
-        y,
-        baseY: y,
-        width: 38,
-        height: 38,
-        used: false,
-        bump: 0,
-        type: "questionBlock"
-      }));
+    // =========================
+    function initBlocks() {
+      blocks = [
+        { x: 250, y: 305 },
+        { x: 520, y: 250 },
+        { x: 820, y: 285 },
+        { x: 1150, y: 300 },
+        { x: 1490, y: 255 },
+        { x: 1900, y: 250 },
+        { x: 2090, y: 315 }
+      ].map((block) => ({ ...block, w: 46, h: 46, used: false, bump: 0 }));
     }
 
     function updateBlocks() {
       blocks.forEach((block) => {
-        if (block.bump > 0) block.bump *= 0.72;
-        if (block.bump < 0.5) block.bump = 0;
-        block.y = block.baseY - block.bump;
+        if (block.bump > 0) block.bump -= 1;
+        if (block.used || game.questionOpen) return;
+
+        const hitNow = rectsOverlap(player, block);
+        const wasBelow = player.prevY >= block.y + block.h - 2;
+        if (hitNow && wasBelow && player.vy < 0) {
+          player.y = block.y + block.h + 1;
+          player.vy = 4;
+          block.used = true;
+          block.bump = 14;
+          openQuestion();
+        }
       });
     }
 
-    function drawBlock(block) {
-      const x = Math.round(block.x - game.cameraX);
-      const y = Math.round(block.y);
-      ctx.fillStyle = block.used ? "#b78345" : CONFIG.colors.blockEdge;
-      ctx.fillRect(x, y, block.width, block.height);
-      ctx.fillStyle = block.used ? "#d19a5b" : CONFIG.colors.block;
-      ctx.fillRect(x + 4, y + 4, block.width - 8, block.height - 8);
-      ctx.fillStyle = block.used ? "#8d683c" : "#fff3a2";
-      ctx.fillRect(x + 7, y + 7, 6, 6);
-      ctx.fillRect(x + block.width - 13, y + 7, 6, 6);
-      ctx.fillRect(x + 7, y + block.height - 13, 6, 6);
-      ctx.fillRect(x + block.width - 13, y + block.height - 13, 6, 6);
-      if (!block.used) {
-        ctx.fillStyle = "#7d4210";
-        ctx.font = "bold 28px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("?", x + block.width / 2, y + 29);
-      }
+    function drawBlocks() {
+      blocks.forEach((block) => {
+        const bumpOffset = block.bump > 0 ? -Math.sin((block.bump / 14) * Math.PI) * 12 : 0;
+        const x = Math.round(block.x - game.cameraX);
+        const y = Math.round(block.y + bumpOffset);
+        const color = block.used ? "#a17b59" : COLORS.question;
+        strokeRect(x, y, block.w, block.h, color);
+        fillRect(x + 5, y + 5, block.w - 10, 8, block.used ? "#c8a27b" : COLORS.questionLight);
+        if (!block.used) {
+          ctx.fillStyle = COLORS.outline;
+          ctx.font = "900 30px Trebuchet MS";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("?", x + block.w / 2, y + block.h / 2 + 1);
+        }
+      });
     }
 
-    function drawPlatform(platform) {
-      const x = Math.round(platform.x - game.cameraX);
-      const y = Math.round(platform.y);
-      if (platform.type === "ground") {
-        ctx.fillStyle = CONFIG.colors.grass;
-        ctx.fillRect(x, y, platform.width, 16);
-        ctx.fillStyle = CONFIG.colors.dirt;
-        ctx.fillRect(x, y + 16, platform.width, platform.height - 16);
-        ctx.strokeStyle = "#7a481c";
-        ctx.lineWidth = 2;
-        for (let tx = Math.floor(platform.x / CONFIG.tile) * CONFIG.tile; tx < platform.x + platform.width; tx += CONFIG.tile) {
-          const sx = tx - game.cameraX;
-          ctx.beginPath();
-          ctx.moveTo(sx, y + 16);
-          ctx.lineTo(sx + CONFIG.tile, y + 52);
-          ctx.stroke();
-        }
-      } else {
-        ctx.fillStyle = CONFIG.colors.brickDark;
-        ctx.fillRect(x, y, platform.width, platform.height);
-        ctx.fillStyle = CONFIG.colors.brick;
-        for (let bx = 0; bx < platform.width; bx += 36) {
-          ctx.fillRect(x + bx + 2, y + 2, 32, 11);
-          ctx.fillRect(x + bx + 11, y + 15, 32, 11);
-        }
-      }
-    }
-
-    // ============================================================
+    // =========================
     // PIPE
-    // ============================================================
-    const pipe = {
-      x: 2240,
-      y: CONFIG.groundY - 86,
-      width: 70,
-      height: 86
-    };
+    // =========================
+    function initPipe() {
+      pipe = { x: 2370, y: CONFIG.groundY - 96, w: 82, h: 96 };
+    }
 
     function updatePipe() {
-      if (game.score >= CONFIG.passScore && rectsOverlap(player, pipe)) {
-        game.mode = "success";
-        game.won = true;
-        screens.success.classList.add("active");
+      if (game.score >= CONFIG.scoreGoal && rectsOverlap(player, pipe)) {
+        showScreen("success");
       }
     }
 
     function drawPipe() {
       const x = Math.round(pipe.x - game.cameraX);
       const y = Math.round(pipe.y);
-      ctx.fillStyle = CONFIG.colors.pipeDark;
-      ctx.fillRect(x - 8, y, pipe.width + 16, 24);
-      ctx.fillStyle = CONFIG.colors.pipe;
-      ctx.fillRect(x - 3, y + 4, pipe.width + 6, 16);
-      ctx.fillRect(x, y + 22, pipe.width, pipe.height - 22);
-      ctx.fillStyle = "rgba(255,255,255,0.25)";
-      ctx.fillRect(x + 10, y + 8, 10, pipe.height - 12);
-      ctx.fillStyle = "#0d5c29";
-      ctx.fillRect(x + pipe.width - 13, y + 24, 5, pipe.height - 28);
+      strokeRect(x + 10, y + 24, pipe.w - 20, pipe.h - 24, COLORS.pipe);
+      strokeRect(x, y, pipe.w, 32, COLORS.pipe);
+      fillRect(x + 14, y + 4, 14, pipe.h - 10, COLORS.pipeLight);
+      fillRect(x + pipe.w - 20, y + 4, 10, pipe.h - 10, COLORS.pipeDark);
+      ctx.fillStyle = game.score >= CONFIG.scoreGoal ? "#ffffff" : "#173957";
+      ctx.font = "900 17px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(game.score >= CONFIG.scoreGoal ? "GO!" : "50", x + pipe.w / 2, y + 17);
     }
 
-    // ============================================================
+    // =========================
     // INPUT
-    // ============================================================
+    // =========================
     const input = {
       left: false,
       right: false,
       jump: false,
-      jumpQueued: false
+      jumpPressed: false
     };
 
-    function queueJump() {
-      input.jump = true;
-      input.jumpQueued = true;
-    }
-
-    function releaseJump() {
-      input.jump = false;
+    function setJump(value) {
+      if (value && !input.jump) input.jumpPressed = true;
+      input.jump = value;
     }
 
     window.addEventListener("keydown", (event) => {
       if (event.code === "ArrowLeft") input.left = true;
       if (event.code === "ArrowRight") input.right = true;
-      if (event.code === "Space") {
-        event.preventDefault();
-        if (!input.jump) queueJump();
-      }
+      if (event.code === "Space") setJump(true);
+      if (["ArrowLeft", "ArrowRight", "Space"].includes(event.code)) event.preventDefault();
     });
 
     window.addEventListener("keyup", (event) => {
       if (event.code === "ArrowLeft") input.left = false;
       if (event.code === "ArrowRight") input.right = false;
-      if (event.code === "Space") releaseJump();
+      if (event.code === "Space") setJump(false);
     });
 
-    function bindHoldButton(button, key) {
-      const on = (event) => {
+    function bindTouchButton(id, onDown, onUp) {
+      const button = document.getElementById(id);
+      const start = (event) => {
         event.preventDefault();
-        input[key] = true;
-        if (key === "jump") queueJump();
-        button.classList.add("pressed");
+        if (event.pointerId && button.setPointerCapture) button.setPointerCapture(event.pointerId);
+        onDown();
       };
-      const off = (event) => {
+      const end = (event) => {
         event.preventDefault();
-        input[key] = false;
-        if (key === "jump") releaseJump();
-        button.classList.remove("pressed");
-      };
-      button.addEventListener("pointerdown", on);
-      button.addEventListener("pointerup", off);
-      button.addEventListener("pointercancel", off);
-      button.addEventListener("pointerleave", off);
-    }
-
-    bindHoldButton(document.getElementById("leftBtn"), "left");
-    bindHoldButton(document.getElementById("rightBtn"), "right");
-    bindHoldButton(document.getElementById("jumpBtn"), "jump");
-    musicBtn.addEventListener("click", toggleMusic);
-
-    document.getElementById("startBtn").addEventListener("click", () => {
-      screens.start.classList.remove("active");
-      screens.character.classList.add("active");
-      game.mode = "character";
-    });
-
-    document.getElementById("playBtn").addEventListener("click", resetGame);
-    document.getElementById("restartWinBtn").addEventListener("click", resetGame);
-    document.getElementById("restartLoseBtn").addEventListener("click", resetGame);
-
-    document.querySelectorAll("[data-character]").forEach((button) => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll("[data-character]").forEach((item) => item.classList.remove("selected"));
-        button.classList.add("selected");
-        game.character = button.dataset.character;
-      });
-    });
-
-    // ============================================================
-    // UPDATE
-    // ============================================================
-    function rectsOverlap(a, b) {
-      return a.x < b.x + b.width &&
-        a.x + a.width > b.x &&
-        a.y < b.y + b.height &&
-        a.y + a.height > b.y;
-    }
-
-    function updatePlayer() {
-      if (game.mode !== "playing") return;
-
-      const previous = { x: player.x, y: player.y };
-      player.vx = 0;
-      if (input.left) {
-        player.vx = -CONFIG.moveSpeed;
-        player.facing = -1;
-      }
-      if (input.right) {
-        player.vx = CONFIG.moveSpeed;
-        player.facing = 1;
-      }
-      if (input.jumpQueued && player.onGround) {
-        player.vy = -CONFIG.jumpPower;
-        player.onGround = false;
-        playSfx("jump");
-      }
-      input.jumpQueued = false;
-
-      player.vy = Math.min(CONFIG.maxFallSpeed, player.vy + CONFIG.gravity);
-      player.x += player.vx;
-      resolveCollisions("x", previous);
-      player.y += player.vy;
-      player.onGround = false;
-      resolveCollisions("y", previous);
-
-      player.x = Math.max(0, Math.min(CONFIG.worldWidth - player.width, player.x));
-      if (player.y > CONFIG.canvasHeight + 80) damagePlayer({ x: player.x - 100 });
-      if (player.vx !== 0) player.walkFrame += 1;
-    }
-
-    function solidObjects() {
-      return [...platforms, ...blocks];
-    }
-
-    function resolveCollisions(axis, previous) {
-      for (const solid of solidObjects()) {
-        if (!rectsOverlap(player, solid)) continue;
-
-        if (axis === "x") {
-          if (player.vx > 0) player.x = solid.x - player.width;
-          if (player.vx < 0) player.x = solid.x + solid.width;
-          player.vx = 0;
-        }
-
-        if (axis === "y") {
-          if (player.vy > 0 && previous.y + player.height <= solid.y + 8) {
-            player.y = solid.y - player.height;
-            player.vy = 0;
-            player.onGround = true;
-          } else if (player.vy < 0 && previous.y >= solid.y + solid.height - 8) {
-            player.y = solid.y + solid.height;
-            player.vy = 0;
-            if (solid.type === "questionBlock") openQuestion(solid);
+        if (event.pointerId && button.releasePointerCapture) {
+          try {
+            button.releasePointerCapture(event.pointerId);
+          } catch (error) {
+            // The pointer may already be released by the browser.
           }
         }
-      }
+        onUp();
+      };
+      button.addEventListener("pointerdown", start, { passive: false });
+      button.addEventListener("pointerup", end, { passive: false });
+      button.addEventListener("pointercancel", end, { passive: false });
+      button.addEventListener("pointerleave", end, { passive: false });
+      button.addEventListener("touchstart", start, { passive: false });
+      button.addEventListener("touchend", end, { passive: false });
+      button.addEventListener("touchcancel", end, { passive: false });
     }
 
-    function updateEnemyCollisions() {
-      enemies.forEach((enemy) => {
-        if (enemy.defeated) return;
-        if (!rectsOverlap(player, enemy)) return;
-        const stomp = player.vy > 0 && player.y + player.height - enemy.y < 18;
-        if (stomp) {
-          player.vy = -9;
-          enemy.defeated = true;
-          enemy.x = enemy.maxX + 1000;
-          playSfx("correct");
-          setTemporaryMessage("踩扁怪物");
-        } else {
-          openEnemyQuestion(enemy);
-        }
+    bindTouchButton("leftBtn", () => input.left = true, () => input.left = false);
+    bindTouchButton("rightBtn", () => input.right = true, () => input.right = false);
+    bindTouchButton("jumpBtn", () => setJump(true), () => setJump(false));
+
+    document.getElementById("startBtn").addEventListener("click", () => showScreen("character"));
+    document.querySelectorAll("[data-character]").forEach((button) => {
+      button.addEventListener("click", () => {
+        game.selectedCharacter = button.dataset.character;
+        resetGame();
       });
+    });
+    document.getElementById("playAgainBtn").addEventListener("click", () => showScreen("character"));
+    document.getElementById("retryBtn").addEventListener("click", () => showScreen("character"));
+
+    ["contextmenu", "selectstart", "dragstart"].forEach((eventName) => {
+      document.addEventListener(eventName, (event) => event.preventDefault(), { passive: false });
+    });
+
+    // =========================
+    // UPDATE
+    // =========================
+    function update(timestamp = 0) {
+      const delta = Math.min(32, timestamp - game.lastTime || 16);
+      game.lastTime = timestamp;
+
+      if (game.screen === "game" && !game.questionOpen) {
+        game.time += delta / 16.67;
+        updatePlayer();
+        updateEnemies();
+        updateCoins();
+        updateBlocks();
+        updatePipe();
+        updateCamera();
+        if (game.feedbackTimer > 0) game.feedbackTimer -= 1;
+      } else {
+        game.time += delta / 30;
+      }
+
+      draw();
+      requestAnimationFrame(update);
     }
 
     function updateCamera() {
-      const target = player.x - CONFIG.canvasWidth * 0.42;
-      game.cameraX += (target - game.cameraX) * 0.12;
-      game.cameraX = Math.max(0, Math.min(CONFIG.worldWidth - CONFIG.canvasWidth, game.cameraX));
+      const target = player.x - CONFIG.cameraPadding;
+      game.cameraX += (target - game.cameraX) * 0.08;
+      game.cameraX = Math.max(0, Math.min(CONFIG.worldWidth - CONFIG.width, game.cameraX));
     }
 
-    function updateGame(timestamp) {
-      game.animationTime = timestamp;
-      updateBlocks();
-
-      if (game.mode === "playing") {
-        updatePlayer();
-        updateEnemies();
-        updateEnemyCollisions();
-        updateCoins();
-        updatePipe();
-        updateCamera();
-      }
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
     }
 
-    // ============================================================
+    // =========================
     // DRAW
-    // ============================================================
+    // =========================
+    function draw() {
+      drawBackground();
+      drawScenery();
+      drawPlatforms();
+      drawCoins();
+      drawBlocks();
+      if (pipe) drawPipe();
+      drawEnemies();
+      if (player) drawPlayer();
+      drawHud();
+    }
+
     function drawBackground() {
-      if (skyImage.complete && skyImage.naturalWidth > 0) {
-        const parallax = -game.cameraX * 0.18;
-        const imgW = CONFIG.canvasWidth;
-        for (let x = parallax % imgW - imgW; x < CONFIG.canvasWidth + imgW; x += imgW) {
-          ctx.drawImage(skyImage, x, 0, imgW, CONFIG.canvasHeight);
-        }
+      const skyReady = skyImage.complete && skyImage.naturalWidth > 0;
+      if (skyReady) {
+        const parallax = (game.cameraX * 0.25) % CONFIG.width;
+        drawSkyCover(-parallax);
+        drawSkyCover(CONFIG.width - parallax);
       } else {
-        const sky = ctx.createLinearGradient(0, 0, 0, CONFIG.canvasHeight);
-        sky.addColorStop(0, "#75d2ff");
-        sky.addColorStop(0.72, "#dff8ff");
-        sky.addColorStop(1, "#85d66a");
-        ctx.fillStyle = sky;
-        ctx.fillRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
+        const gradient = ctx.createLinearGradient(0, 0, 0, CONFIG.height);
+        gradient.addColorStop(0, "#75d8ff");
+        gradient.addColorStop(0.62, "#bdf4ff");
+        gradient.addColorStop(1, "#fff0aa");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+        drawCloud(120 - (game.cameraX * 0.18) % 1120, 82, 1);
+        drawCloud(610 - (game.cameraX * 0.12) % 1180, 120, 1.25);
+        drawCloud(980 - (game.cameraX * 0.16) % 1200, 62, 0.85);
+      }
+    }
+
+    function drawSkyCover(dx) {
+      const sourceRatio = skyImage.naturalWidth / skyImage.naturalHeight;
+      const targetRatio = CONFIG.width / CONFIG.height;
+      let sx = 0;
+      let sy = 0;
+      let sw = skyImage.naturalWidth;
+      let sh = skyImage.naturalHeight;
+
+      if (sourceRatio > targetRatio) {
+        sw = skyImage.naturalHeight * targetRatio;
+        sx = (skyImage.naturalWidth - sw) / 2;
+      } else {
+        sh = skyImage.naturalWidth / targetRatio;
+        sy = (skyImage.naturalHeight - sh) / 2;
       }
 
-      drawCloud(135 - game.cameraX * 0.22, 78, 1);
-      drawCloud(520 - game.cameraX * 0.18, 120, 0.85);
-      drawCloud(1030 - game.cameraX * 0.2, 76, 1.1);
-      drawCloud(1690 - game.cameraX * 0.17, 104, 0.9);
-      drawHill(120 - game.cameraX * 0.28, 410, "#6ac95f");
-      drawHill(780 - game.cameraX * 0.25, 432, "#58b548");
-      drawHill(1460 - game.cameraX * 0.28, 412, "#6ac95f");
+      ctx.drawImage(skyImage, sx, sy, sw, sh, dx, 0, CONFIG.width, CONFIG.height);
+    }
+
+    function drawScenery() {
+      drawHill(160 - game.cameraX * 0.38, CONFIG.groundY, 180, "#6cd36a");
+      drawHill(760 - game.cameraX * 0.34, CONFIG.groundY, 250, "#44bb64");
+      drawHill(1420 - game.cameraX * 0.36, CONFIG.groundY, 220, "#66cf6b");
+      drawHill(2160 - game.cameraX * 0.32, CONFIG.groundY, 260, "#43b960");
+    }
+
+    function drawPlatforms() {
+      drawGround();
+      platforms.forEach((platform) => {
+        const x = Math.round(platform.x - game.cameraX);
+        strokeRect(x, platform.y, platform.w, platform.h, COLORS.brick);
+        for (let i = 0; i < platform.w; i += 36) {
+          fillRect(x + i + 3, platform.y + 4, 26, 5, COLORS.brickLight);
+        }
+      });
+    }
+
+    function drawGround() {
+      fillRect(0, CONFIG.groundY, CONFIG.width, CONFIG.height - CONFIG.groundY, COLORS.dirt);
+      fillRect(0, CONFIG.groundY, CONFIG.width, 18, COLORS.grass);
+      for (let x = -Math.floor(game.cameraX % CONFIG.tile); x < CONFIG.width; x += CONFIG.tile) {
+        fillRect(x, CONFIG.groundY + 18, 4, CONFIG.height - CONFIG.groundY, COLORS.dirtDark);
+        fillRect(x + 4, CONFIG.groundY + 4, 22, 6, COLORS.grassLight);
+      }
+    }
+
+    function drawHud() {
+      strokeRect(18, 17, 190, 46, "#fff7d1");
+      ctx.fillStyle = COLORS.outline;
+      ctx.font = "900 22px Trebuchet MS";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`分数 ${game.score}`, 34, 40);
+
+      for (let i = 0; i < CONFIG.maxHearts; i += 1) {
+        drawHeart(760 + i * 52, 26, i < game.hearts ? "#e73b47" : "#b6c2c9");
+      }
+
+      if (game.feedbackTimer > 0 && game.feedback) {
+        ctx.fillStyle = "#fff7d1";
+        ctx.strokeStyle = COLORS.outline;
+        ctx.lineWidth = 4;
+        ctx.font = "900 26px Trebuchet MS";
+        ctx.textAlign = "center";
+        ctx.strokeText(game.feedback, CONFIG.width / 2, 82);
+        ctx.fillText(game.feedback, CONFIG.width / 2, 82);
+      }
+    }
+
+    function drawHeart(x, y, color) {
+      fillRect(x + 8, y, 12, 12, color);
+      fillRect(x + 28, y, 12, 12, color);
+      fillRect(x, y + 10, 48, 18, color);
+      fillRect(x + 8, y + 28, 32, 10, color);
+      fillRect(x + 18, y + 38, 12, 8, color);
+      ctx.strokeStyle = COLORS.outline;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x + 1, y + 10, 46, 18);
     }
 
     function drawCloud(x, y, scale) {
-      ctx.fillStyle = CONFIG.colors.cloud;
-      ctx.fillRect(x, y + 18 * scale, 110 * scale, 28 * scale);
-      ctx.fillRect(x + 20 * scale, y + 4 * scale, 36 * scale, 38 * scale);
-      ctx.fillRect(x + 52 * scale, y, 42 * scale, 44 * scale);
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.beginPath();
+      ctx.arc(x, y + 22 * scale, 23 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 28 * scale, y + 7 * scale, 30 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 66 * scale, y + 20 * scale, 25 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      fillRect(x - 12 * scale, y + 24 * scale, 92 * scale, 22 * scale, "rgba(255,255,255,0.88)");
     }
 
-    function drawHill(x, y, color) {
+    function drawHill(x, ground, radius, color) {
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x, CONFIG.groundY);
-      ctx.quadraticCurveTo(x + 130, y - 170, x + 270, CONFIG.groundY);
+      ctx.arc(x, ground + radius * 0.45, radius, Math.PI, 0);
+      ctx.lineTo(x + radius, ground + 60);
+      ctx.lineTo(x - radius, ground + 60);
       ctx.closePath();
       ctx.fill();
     }
 
-    function drawPlayer() {
-      const now = performance.now();
-      const blink = player.invincibleUntil > now && Math.floor(now / 90) % 2 === 0;
-      if (blink) return;
-      const x = Math.round(player.x - game.cameraX - 10);
-      const y = Math.round(player.y - 9);
-      drawPixelCharacter(ctx, x, y, 3.8, game.character, player.walkFrame, player.facing);
-    }
-
-    function drawHud() {
-      ctx.save();
-      ctx.fillStyle = "rgba(255, 248, 220, 0.9)";
-      ctx.fillRect(12, 12, 342, 46);
-      ctx.strokeStyle = "#6d421d";
-      ctx.lineWidth = 3;
-      ctx.strokeRect(12, 12, 342, 46);
-
-      ctx.fillStyle = "#1d2440";
-      ctx.font = "bold 20px Arial";
-      ctx.textAlign = "left";
-      ctx.fillText(`分数 ${game.score}`, 26, 43);
-      ctx.fillText(`金币 ${game.coins}`, 136, 43);
-      for (let i = 0; i < CONFIG.maxHearts; i += 1) {
-        drawHeart(242 + i * 28, 27, i < game.hearts ? "#e53935" : "#9d9d9d");
-      }
-
-      if (game.messageUntil > performance.now()) {
-        const textWidth = ctx.measureText(game.message).width + 32;
-        ctx.fillStyle = "rgba(29, 36, 64, 0.74)";
-        ctx.fillRect((CONFIG.canvasWidth - textWidth) / 2, 18, textWidth, 38);
-        ctx.fillStyle = "#fff";
-        ctx.textAlign = "center";
-        ctx.fillText(game.message, CONFIG.canvasWidth / 2, 44);
-      }
-
-      if (game.score < CONFIG.passScore) {
-        ctx.fillStyle = "rgba(255, 248, 220, 0.9)";
-        ctx.fillRect(CONFIG.canvasWidth - 258, 12, 246, 46);
-        ctx.strokeStyle = "#6d421d";
-        ctx.strokeRect(CONFIG.canvasWidth - 258, 12, 246, 46);
-        ctx.fillStyle = "#1d2440";
-        ctx.textAlign = "center";
-        ctx.fillText(`到 50 分可进管道：${game.score}/50`, CONFIG.canvasWidth - 135, 43);
-      } else {
-        ctx.fillStyle = "#2f9f5b";
-        ctx.fillRect(CONFIG.canvasWidth - 238, 12, 226, 46);
-        ctx.fillStyle = "#fff";
-        ctx.textAlign = "center";
-        ctx.fillText("进入管道通关！", CONFIG.canvasWidth - 125, 43);
-      }
-      ctx.restore();
-    }
-
-    function drawHeart(x, y, color) {
+    function fillRect(x, y, w, h, color) {
       ctx.fillStyle = color;
-      ctx.fillRect(x + 4, y, 8, 8);
-      ctx.fillRect(x + 16, y, 8, 8);
-      ctx.fillRect(x, y + 8, 28, 8);
-      ctx.fillRect(x + 4, y + 16, 20, 8);
-      ctx.fillRect(x + 10, y + 24, 8, 7);
+      ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
     }
 
-    function drawScene() {
-      ctx.clearRect(0, 0, CONFIG.canvasWidth, CONFIG.canvasHeight);
-      drawBackground();
-      platforms.forEach(drawPlatform);
-      drawPipe();
-      blocks.forEach(drawBlock);
-      coins.forEach(drawCoin);
-      enemies.forEach((enemy) => {
-        if (!enemy.defeated && enemy.x < CONFIG.worldWidth) drawEnemy(enemy);
-      });
-      drawPlayer();
-      drawHud();
+    function strokeRect(x, y, w, h, color) {
+      fillRect(x, y, w, h, color);
+      ctx.strokeStyle = COLORS.outline;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(Math.round(x) + 1.5, Math.round(y) + 1.5, Math.round(w) - 3, Math.round(h) - 3);
     }
 
-    function gameLoop(timestamp) {
-      updateGame(timestamp);
-      drawScene();
-      requestAnimationFrame(gameLoop);
-    }
-
-    drawCharacterPreviews();
-    resetPlayer();
-    resetCoins();
-    resetBlocks();
-    resetEnemies();
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(update);
   </script>
 </body>
 </html>
