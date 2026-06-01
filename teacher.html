@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Math World Teacher Records</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      color: #1d2440;
+      background:
+        linear-gradient(rgba(255, 255, 255, .86), rgba(255, 255, 255, .68)),
+        url("sky.png") center / cover fixed no-repeat,
+        linear-gradient(#8bd7ff, #e6fbff);
+    }
+
+    .page {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 4px solid #2b2b2b;
+      border-radius: 8px;
+      background: #fff8dc;
+      box-shadow: 0 6px 0 #6d421d;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      color: #e53935;
+      font-size: clamp(28px, 5vw, 46px);
+      line-height: 1;
+      text-shadow: 2px 2px 0 #ffd447, 4px 4px 0 #2c5aa0;
+    }
+
+    h2 {
+      color: #245286;
+      font-size: 22px;
+    }
+
+    h3 {
+      margin: 14px 0 8px;
+      color: #245286;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: #245286;
+      font-weight: 900;
+    }
+
+    button, a.button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      background: #2c5aa0;
+      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .25), 0 3px 0 rgba(0, 0, 0, .25);
+      cursor: pointer;
+      font: 900 15px "Trebuchet MS", Arial, sans-serif;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button:active, a.button:active {
+      transform: translateY(2px);
+      box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .25), 0 1px 0 rgba(0, 0, 0, .25);
+    }
+
+    .green {
+      background: #39a85c;
+    }
+
+    .toolbar,
+    .cards,
+    .content-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .toolbar {
+      grid-template-columns: 1.4fr .8fr auto auto auto;
+      margin-bottom: 16px;
+      padding: 14px;
+      border: 3px solid #6d421d;
+      border-radius: 8px;
+      background: rgba(255, 248, 220, .96);
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 42px;
+      border: 3px solid #6d421d;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #1d2440;
+      background: #fff;
+      font: 900 15px "Trebuchet MS", Arial, sans-serif;
+    }
+
+    .cards {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .metric,
+    .panel {
+      border: 3px solid #6d421d;
+      border-radius: 8px;
+      background: rgba(255, 253, 242, .98);
+      box-shadow: 0 4px 0 rgba(109, 66, 29, .28);
+    }
+
+    .metric {
+      padding: 14px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 4px;
+      color: #e53935;
+      font-size: 28px;
+    }
+
+    .content-grid {
+      grid-template-columns: minmax(320px, .95fr) minmax(360px, 1.25fr);
+      align-items: start;
+    }
+
+    .panel {
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 3px solid #d1a66d;
+      background: #fff8dc;
+    }
+
+    .status {
+      color: #245286;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .record-list {
+      max-height: 620px;
+      overflow-y: auto;
+    }
+
+    .record-item {
+      width: 100%;
+      display: block;
+      border: 0;
+      border-bottom: 2px solid #ead09b;
+      border-radius: 0;
+      padding: 12px 14px;
+      color: #1d2440;
+      background: #fffdf2;
+      box-shadow: none;
+      text-align: left;
+    }
+
+    .record-item:hover,
+    .record-item.selected {
+      background: #e8f4ff;
+    }
+
+    .record-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-weight: 900;
+    }
+
+    .record-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: #4d5874;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .pill {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 3px 8px;
+      color: #fff;
+      background: #2c5aa0;
+    }
+
+    .detail {
+      padding: 14px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .small-card {
+      border: 2px solid #d1a66d;
+      border-radius: 8px;
+      padding: 9px;
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .small-card strong {
+      display: block;
+      margin-top: 4px;
+      color: #e53935;
+      font-size: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      background: #fff;
+    }
+
+    th, td {
+      border: 2px solid #d1a66d;
+      padding: 7px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      background: #fff2bd;
+    }
+
+    ul {
+      margin: 8px 0 12px;
+      padding-left: 22px;
+    }
+
+    .empty {
+      padding: 24px;
+      color: #4d5874;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    @media (max-width: 860px) {
+      .page {
+        padding: 12px;
+      }
+
+      .toolbar,
+      .cards,
+      .content-grid,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        align-items: stretch;
+      }
+
+      header .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Teacher Records</h1>
+        <p class="subtitle">Super Math World 学生学习记录</p>
+      </div>
+      <a class="button green" href="index.html">回到游戏</a>
+    </header>
+
+    <section class="toolbar" aria-label="筛选工具">
+      <input id="searchInput" type="search" placeholder="搜索学生姓名" />
+      <select id="gradeFilter">
+        <option value="">全部年级</option>
+        <option value="Y1">Y1</option>
+        <option value="Y2">Y2</option>
+        <option value="Y3">Y3</option>
+      </select>
+      <button id="refreshBtn" type="button">刷新 Firebase</button>
+      <button id="localBtn" type="button">读取本机备份</button>
+      <button id="exportBtn" type="button">下载全部 JSON</button>
+    </section>
+
+    <section class="cards" aria-label="总览">
+      <div class="metric">记录数<strong id="totalSessions">0</strong></div>
+      <div class="metric">平均正确率<strong id="averageAccuracy">0%</strong></div>
+      <div class="metric">总答题数<strong id="totalQuestions">0</strong></div>
+      <div class="metric">平均分<strong id="averageScore">0</strong></div>
+    </section>
+
+    <section class="content-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>记录列表</h2>
+          <span id="statusText" class="status">准备读取</span>
+        </div>
+        <div id="recordList" class="record-list">
+          <p class="empty">还没有读取到记录。</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>学习报告</h2>
+          <span id="sourceText" class="status"></span>
+        </div>
+        <div id="detailView" class="detail">
+          <p class="empty">点击左边一条记录查看完整报告。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    "use strict";
+
+    // ============================================================
+    // FIREBASE CONFIG
+    // ============================================================
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
+    };
+
+    const LOCAL_KEY = "superMathWorldSessions";
+    let db = null;
+    let allSessions = [];
+    let selectedSessionId = "";
+    let currentSource = "";
+
+    const recordList = document.getElementById("recordList");
+    const detailView = document.getElementById("detailView");
+    const statusText = document.getElementById("statusText");
+    const sourceText = document.getElementById("sourceText");
+    const searchInput = document.getElementById("searchInput");
+    const gradeFilter = document.getElementById("gradeFilter");
+
+    function initFirebase() {
+      try {
+        if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_")) {
+          throw new Error("Firebase config has not been filled");
+        }
+        if (!window.firebase) throw new Error("Firebase SDK 没有载入");
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+      } catch (error) {
+        db = null;
+        console.warn("Firebase init failed:", error);
+      }
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString("zh-Hans-MY", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function filteredSessions() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const grade = gradeFilter.value;
+      return allSessions.filter((session) => {
+        const matchesName = !keyword || String(session.studentName || "").toLowerCase().includes(keyword);
+        const matchesGrade = !grade || session.grade === grade;
+        return matchesName && matchesGrade;
+      });
+    }
+
+    function updateMetrics(sessions) {
+      const total = sessions.length;
+      const questions = sessions.reduce((sum, item) => sum + Number(item.totalQuestions || 0), 0);
+      const score = sessions.reduce((sum, item) => sum + Number(item.score || 0), 0);
+      const accuracy = total === 0 ? 0 : Math.round(sessions.reduce((sum, item) => sum + Number(item.accuracy || 0), 0) / total);
+      document.getElementById("totalSessions").textContent = total;
+      document.getElementById("averageAccuracy").textContent = `${accuracy}%`;
+      document.getElementById("totalQuestions").textContent = questions;
+      document.getElementById("averageScore").textContent = total === 0 ? "0" : Math.round(score / total);
+    }
+
+    function renderList() {
+      const sessions = filteredSessions();
+      updateMetrics(sessions);
+      if (sessions.length === 0) {
+        recordList.innerHTML = `<p class="empty">没有符合筛选的记录。</p>`;
+        return;
+      }
+
+      recordList.innerHTML = sessions.map((session) => `
+        <button class="record-item ${session.sessionId === selectedSessionId ? "selected" : ""}" data-id="${escapeHtml(session.sessionId)}" type="button">
+          <span class="record-title">
+            <span>${escapeHtml(session.studentName || "未命名学生")}</span>
+            <span>${Number(session.accuracy || 0)}%</span>
+          </span>
+          <span class="record-meta">
+            <span class="pill">${escapeHtml(session.grade || "-")}</span>
+            <span>分数 ${Number(session.score || 0)}</span>
+            <span>答对 ${Number(session.correctCount || 0)}/${Number(session.totalQuestions || 0)}</span>
+            <span>${formatDate(session.endedAt || session.startedAt)}</span>
+          </span>
+        </button>
+      `).join("");
+
+      [...recordList.querySelectorAll(".record-item")].forEach((button) => {
+        button.addEventListener("click", () => selectSession(button.dataset.id));
+      });
+    }
+
+    function topicRows(session) {
+      const stats = session.topicStats || {};
+      const rows = Object.entries(stats).map(([topic, stat]) => `
+        <tr>
+          <td>${escapeHtml(topic)}</td>
+          <td>${Number(stat.correct || 0)}/${Number(stat.total || 0)}</td>
+          <td>${Number(stat.accuracy || 0)}%</td>
+        </tr>
+      `).join("");
+      return rows || `<tr><td colspan="3">暂无题型统计</td></tr>`;
+    }
+
+    function answerRows(session) {
+      const answers = Array.isArray(session.answers) ? session.answers : [];
+      const rows = answers.map((answer) => `
+        <tr>
+          <td>${escapeHtml(answer.topic)}</td>
+          <td>${escapeHtml(answer.question)}</td>
+          <td>${escapeHtml(answer.studentAnswer)}</td>
+          <td>${escapeHtml(answer.correctAnswer)}</td>
+          <td>${answer.isCorrect ? "对" : "错"}</td>
+          <td>${Number(answer.timeUsed || 0)} 秒</td>
+        </tr>
+      `).join("");
+      return rows || `<tr><td colspan="6">暂无答题记录</td></tr>`;
+    }
+
+    function listItems(items) {
+      if (!Array.isArray(items) || items.length === 0) return "<li>暂无资料</li>";
+      return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    }
+
+    function selectSession(sessionId) {
+      const session = allSessions.find((item) => item.sessionId === sessionId);
+      if (!session) return;
+      selectedSessionId = sessionId;
+      sourceText.textContent = currentSource;
+      renderList();
+      detailView.innerHTML = `
+        <h3>${escapeHtml(session.studentName || "未命名学生")} 的学习报告</h3>
+        <p><strong>年级：</strong>${escapeHtml(session.grade || "-")}　<strong>时间：</strong>${formatDate(session.endedAt || session.startedAt)}</p>
+        <div class="summary-grid">
+          <div class="small-card">总分<strong>${Number(session.score || 0)}</strong></div>
+          <div class="small-card">剩余 HP<strong>${Number(session.hpRemaining || 0)}</strong></div>
+          <div class="small-card">正确率<strong>${Number(session.accuracy || 0)}%</strong></div>
+          <div class="small-card">总答题数<strong>${Number(session.totalQuestions || 0)}</strong></div>
+          <div class="small-card">答对题数<strong>${Number(session.correctCount || 0)}</strong></div>
+          <div class="small-card">Session ID<strong style="font-size:13px">${escapeHtml(session.sessionId)}</strong></div>
+        </div>
+
+        <div class="button-row" style="margin:12px 0;">
+          <button id="copyOneBtn" type="button">复制报告</button>
+          <button id="downloadOneBtn" type="button">下载这份 JSON</button>
+        </div>
+
+        <h3>各题型正确率</h3>
+        <table>
+          <thead><tr><th>题型</th><th>答对/总题</th><th>正确率</th></tr></thead>
+          <tbody>${topicRows(session)}</tbody>
+        </table>
+
+        <h3>学生优点</h3>
+        <ul>${listItems(session.strengths)}</ul>
+
+        <h3>基本掌握但需巩固</h3>
+        <ul>${listItems(session.consolidations)}</ul>
+
+        <h3>需要加强</h3>
+        <ul>${listItems(session.weaknesses)}</ul>
+
+        <h3>老师后续练习建议</h3>
+        <ul>${listItems(session.recommendations)}</ul>
+
+        <h3>答题明细</h3>
+        <table>
+          <thead><tr><th>题型</th><th>题目</th><th>学生答案</th><th>正确答案</th><th>结果</th><th>用时</th></tr></thead>
+          <tbody>${answerRows(session)}</tbody>
+        </table>
+      `;
+
+      document.getElementById("copyOneBtn").addEventListener("click", () => copyReport(session));
+      document.getElementById("downloadOneBtn").addEventListener("click", () => downloadJson([session], `super-math-world-${session.sessionId}.json`));
+    }
+
+    function reportText(session) {
+      const lines = [
+        "【Super Math World 学习报告】",
+        `学生：${session.studentName || ""}`,
+        `年级：${session.grade || ""}`,
+        `总答题数：${Number(session.totalQuestions || 0)}`,
+        `答对题数：${Number(session.correctCount || 0)}`,
+        `正确率：${Number(session.accuracy || 0)}%`,
+        "",
+        "优点：",
+        ...(session.strengths || ["暂无资料"]),
+        "",
+        "需要巩固：",
+        ...(session.consolidations || ["暂无资料"]),
+        "",
+        "需要加强：",
+        ...(session.weaknesses || ["暂无资料"]),
+        "",
+        "后续建议：",
+        ...(session.recommendations || ["暂无资料"])
+      ];
+      return lines.join("\n");
+    }
+
+    async function copyReport(session) {
+      await navigator.clipboard.writeText(reportText(session));
+      statusText.textContent = "已复制报告";
+    }
+
+    function downloadJson(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadFirebaseSessions() {
+      statusText.textContent = "读取 Firebase...";
+      currentSource = "Firebase";
+      if (!db) {
+        statusText.textContent = "Firebase 无法连接";
+        loadLocalSessions();
+        return;
+      }
+      try {
+        const snapshot = await db.collection("mathGameSessions").orderBy("startedAt", "desc").limit(200).get();
+        allSessions = snapshot.docs.map((doc) => doc.data());
+        selectedSessionId = "";
+        statusText.textContent = `Firebase：${allSessions.length} 条`;
+        sourceText.textContent = currentSource;
+        detailView.innerHTML = `<p class="empty">点击左边一条记录查看完整报告。</p>`;
+        renderList();
+      } catch (error) {
+        console.warn(error);
+        statusText.textContent = "Firebase 读取失败，已尝试本机备份";
+        loadLocalSessions();
+      }
+    }
+
+    function loadLocalSessions() {
+      currentSource = "本机备份";
+      try {
+        allSessions = JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]")
+          .sort((a, b) => String(b.startedAt || "").localeCompare(String(a.startedAt || "")));
+      } catch (error) {
+        allSessions = [];
+      }
+      selectedSessionId = "";
+      statusText.textContent = `本机备份：${allSessions.length} 条`;
+      sourceText.textContent = currentSource;
+      detailView.innerHTML = `<p class="empty">点击左边一条记录查看完整报告。</p>`;
+      renderList();
+    }
+
+    searchInput.addEventListener("input", renderList);
+    gradeFilter.addEventListener("change", renderList);
+    document.getElementById("refreshBtn").addEventListener("click", loadFirebaseSessions);
+    document.getElementById("localBtn").addEventListener("click", loadLocalSessions);
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      downloadJson(filteredSessions(), "super-math-world-sessions.json");
+    });
+
+    initFirebase();
+    loadFirebaseSessions();
+  </script>
+</body>
+</html>
